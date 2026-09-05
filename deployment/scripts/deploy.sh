@@ -169,7 +169,9 @@ REMOTE_EOF
 # --- 5. Verify through the edge ---
 echo "=== Verifying https://$DOMAIN/api/health ==="
 sleep 3
-if curl -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"; then
+# These deploy hosts use IPv4. Their IPv6 route can reach Cloudflare while
+# failing its origin connection, so check the application's configured path.
+if curl -4 -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"; then
   echo; echo "Health check passed"
 else
   echo "ERROR: edge health check failed"; exit 1
