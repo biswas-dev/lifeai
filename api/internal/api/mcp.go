@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,6 +51,12 @@ type rpcResponse struct {
 	Error   *rpcError       `json:"error,omitempty"`
 }
 
+type mcpImageContent struct {
+	Type     string `json:"type"`
+	Data     string `json:"data"`
+	MimeType string `json:"mimeType"`
+}
+
 type mcpTool struct {
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
@@ -60,6 +67,18 @@ type mcpTool struct {
 
 // HandleMCP is the endpoint.
 func (s *Server) HandleMCP(w http.ResponseWriter, r *http.Request) {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		allowed := origin == strings.TrimRight(s.cfg.AppURL, "/")
+		for _, configured := range s.cfg.CORSAllowedOrigins {
+			if origin == configured {
+				allowed = true
+			}
+		}
+		if !allowed {
+			http.Error(w, "origin not allowed", http.StatusForbidden)
+			return
+		}
+	}
 	switch r.Method {
 	case http.MethodGet:
 		// No server-initiated stream; the spec allows a 405 here.
@@ -209,6 +228,10 @@ func (s *Server) mcpDispatch(ctx context.Context, userID int64, scopes goapi.Sco
 		if err != nil {
 			s.log.Warn("mcp tool failed", zap.String("tool", p.Name), zap.Error(err))
 			resp.Result = toolError(err.Error())
+			break
+		}
+		if content, ok := result.(mcpImageContent); ok {
+			resp.Result = map[string]any{"content": []any{content}}
 			break
 		}
 		b, _ := json.Marshal(result)
@@ -602,6 +625,81 @@ func init() {
 				return out, nil
 			},
 		},
+		{
+			Name:        "list_photos",
+			Description: "List your meal, ingredient and progress photos, newest first. Get an image with get_photo for your own visual analysis; no app model calls.",
+			InputSchema: schema(map[string]any{"kind": prop("string", "progress, food or ingredients"), "date": prop("string", "Optional YYYY-MM-DD"), "limit": prop("integer", "1-100; default 30")}),
+			run: func(ctx context.Context, s *Server, userID int64, args map[string]any) (any, error) {
+				query := `SELECT ` + photoColumns + ` FROM photos WHERE user_id = ?`
+				values := []any{userID}
+				if kind := argString(args, "kind"); kind != "" {
+					query += ` AND kind = ?`
+					values = append(values, kind)
+				}
+				if date := argString(args, "date"); date != "" {
+					if !dates.Valid(date) {
+						return nil, errors.New("date must be YYYY-MM-DD")
+					}
+					query += ` AND on_date = ?`
+					values = append(values, date)
+				}
+				limit, ok := argInt(args, "limit")
+				if !ok {
+					limit = 30
+				}
+				if limit < 1 || limit > 100 {
+					return nil, errors.New("limit must be 1-100")
+				}
+				query += ` ORDER BY on_date DESC,id DESC LIMIT ?`
+				values = append(values, limit)
+				rows, err := s.db.QueryContext(ctx, query, values...)
+				if err != nil {
+					return nil, err
+				}
+				defer rows.Close()
+				out := []Photo{}
+				for rows.Next() {
+					p, err := scanPhoto(rows)
+					if err != nil {
+						return nil, err
+					}
+					out = append(out, p)
+				}
+				return out, rows.Err()
+			},
+		},
+		{
+			Name:        "get_photo",
+			Description: "Read one of your photos as image content for visual analysis by your agent. Default is a small thumbnail to save tokens; set full_size for detail.",
+			InputSchema: schema(map[string]any{"id": prop("integer", "Photo ID"), "full_size": prop("boolean", "Use the stored full image instead of thumbnail")}, "id"),
+			run: func(ctx context.Context, s *Server, userID int64, args map[string]any) (any, error) {
+				id, ok := argInt(args, "id")
+				if !ok || id < 1 {
+					return nil, errors.New("a positive photo id is required")
+				}
+				var path, thumb, mime string
+				if err := s.db.QueryRowContext(ctx, `SELECT rel_path,thumb_path,mime FROM photos WHERE id=? AND user_id=?`, id, userID).Scan(&path, &thumb, &mime); err != nil {
+					return nil, errors.New("photo not found")
+				}
+				if !argBool(args, "full_size") && thumb != "" {
+					path = thumb
+				}
+				f, err := s.photos.Open(path)
+				if err != nil {
+					return nil, errors.New("photo unavailable")
+				}
+				defer f.Close()
+				b, err := io.ReadAll(io.LimitReader(f, (16<<20)+1))
+				if err != nil {
+					return nil, err
+				}
+				if len(b) > 16<<20 {
+					return nil, errors.New("photo too large")
+				}
+				return mcpImageContent{Type: "image", Data: base64.StdEncoding.EncodeToString(b), MimeType: mime}, nil
+			},
+		},
+
 		{
 			Name:        "list_recipes",
 			Description: "The recipe library with per-serving macros. Filter by search text, tag or favourites.",

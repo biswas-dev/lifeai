@@ -52,7 +52,7 @@ Create a read-only token in Settings → API & MCP access. Configure a streamabl
 - URL: `https://lifeai.cc/mcp`
 - Header: `Authorization: Bearer <your token>`
 
-Start with `get_health_summary`, then `get_blood_markers`, `list_days`, `get_stats`, recipes or journal tools. Tokens expire and can be revoked in Settings. Write tools require an explicit write scope. `/api/openapi.yaml` describes the REST interface; the MCP tool list is discoverable using `tools/list`.
+Start with `get_health_summary`, then `get_blood_markers`, `list_days`, `get_stats`, recipes or journal tools. `list_photos` and `get_photo` let your agent inspect stored images (thumbnails by default to reduce token usage). Tokens expire and can be revoked in Settings. Write tools require an explicit write scope. `/api/openapi.yaml` describes the REST interface; the MCP tool list is discoverable using `tools/list`.
 
 ## Operations and limitations
 
