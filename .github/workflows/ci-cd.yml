@@ -172,6 +172,6 @@ jobs:
         env:
           DOMAIN: ${{ github.ref_name == 'main' && 'staging.lifeai.cc' || github.ref_name == 'uat' && 'uat.lifeai.cc' || 'lifeai.cc' }}
         run: |
-          curl -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"
-          actual=$(curl -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/version" | jq -r .git_commit)
+          curl -4 -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"
+          actual=$(curl -4 -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/version" | jq -r .git_commit)
           test "$actual" = "${GITHUB_SHA:0:7}"
