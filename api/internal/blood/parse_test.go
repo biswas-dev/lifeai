@@ -101,3 +101,18 @@ func TestCanonical(t *testing.T) {
 		}
 	}
 }
+
+func TestParsePageBoundaryAndQualitativeMarkers(t *testing.T) {
+	text := "\f24      TOTAL CHOLESTEROL/HDL    TEST STATUS\n Final\n REFERENCE     YOUR RESULT\n             4.2 uninterpreted\n RATIO\n\f36       Kidney Failure Risk Equation       TEST STATUS\n Final\n YOUR RESULT\n See Details\n"
+	rep := Parse(text)
+	if len(rep.Markers) != 2 {
+		t.Fatalf("missing compact or mixed-case heading: %+v", rep)
+	}
+	m := rep.Markers[0]
+	if m.Code != "chol_hdl_ratio" || m.Unit != "" || m.Flag != "uninterpreted" {
+		t.Fatalf("misread ratio: %+v", m)
+	}
+	if rep.Markers[1].Flag != "see_details" || rep.Markers[1].Value != nil {
+		t.Fatal("qualitative marker lost")
+	}
+}

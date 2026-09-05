@@ -15,7 +15,7 @@ type Report struct {
 
 var (
 	// Dynacare Plus: "   19         CHOLESTEROL, TOTAL        TEST STATUS"
-	dynacareHeader = regexp.MustCompile(`^\s{2,}(\d{1,2})\s{4,}([A-Z][A-Z0-9 ,()/\-\.%*:]+?)\s{3,}TEST STATUS`)
+	dynacareHeader = regexp.MustCompile(`^\s*(\d{1,2})\s{2,}([A-Za-z][A-Za-z0-9 ,()/\-\.%*:]+?)\s{3,}TEST STATUS`)
 	dynacareDate   = regexp.MustCompile(`DATE SAMPLES COLLECTED:\s+(\d{4}) (\w{3}) (\d{1,2})`)
 	dynacareDoctor = regexp.MustCompile(`ORDERED BY:\s+(.+?)\s*$`)
 	// Generic table row: "LDL Cholesterol   2.8   mmol/L   < 3.50"

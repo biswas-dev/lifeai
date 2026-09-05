@@ -127,7 +127,7 @@ func Canonical(name, unit string) string {
 		}
 		return "mch"
 	}
-	if strings.Contains(n, "ratio") && strings.Contains(n, "creatinine") {
+	if strings.Contains(n, "ratio") && strings.Contains(n, "creat") {
 		return "acr"
 	}
 	if strings.Contains(n, "ldl") {
@@ -136,7 +136,7 @@ func Canonical(name, unit string) string {
 	if strings.Contains(n, "non-hdl") || strings.Contains(n, "non hdl") {
 		return "non_hdl"
 	}
-	if strings.Contains(n, "hdl") && strings.Contains(n, "ratio") {
+	if strings.Contains(n, "cholesterol/hdl") || (strings.Contains(n, "hdl") && strings.Contains(n, "ratio")) {
 		return "chol_hdl_ratio"
 	}
 	for _, d := range Definitions {
@@ -186,7 +186,7 @@ func ParseRange(s string) (low, high *float64, unit string) {
 func ParseResult(s string) (value *float64, unit, flag string) {
 	s = strings.TrimSpace(s)
 	lower := strings.ToLower(s)
-	for _, f := range []string{"see details", "normal", "abnormal", "high", "low", "positive", "negative"} {
+	for _, f := range []string{"see details", "uninterpreted", "unavailable", "pending", "normal", "abnormal", "high", "low", "positive", "negative"} {
 		if strings.HasSuffix(lower, f) {
 			flag = strings.ReplaceAll(f, " ", "_")
 			s = strings.TrimSpace(s[:len(s)-len(f)])
