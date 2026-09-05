@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../state/AuthContext";
 import { Spinner } from "../components/ui";
 
-/** Landing point for go-login's success redirect: /oauth/callback?token=… */
+/** Consume the session fragment, then immediately remove it from history. */
 export function OAuthCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -14,7 +14,8 @@ export function OAuthCallback() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    const token = params.get("token");
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("token") || params.get("token");
+    window.history.replaceState(null, "", window.location.pathname);
     if (!token) {
       navigate("/login?error=Sign+in+failed", { replace: true });
       return;

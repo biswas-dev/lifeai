@@ -31,6 +31,8 @@ cd ../web && npm ci && npm test && npm run build
 
 ## Data connections
 
+Google sign-in is configured through the `lifeai-cc` Google Cloud project with callbacks at `https://<environment>/api/auth/google/callback`. Set each deployment's `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets. It requests only `openid email profile`, uses browser-bound state and PKCE, and returns the app session in a URL fragment. Verified Gmail and Workspace identities can link to existing accounts; other existing email addresses must use password sign-in. New Google users follow `ALLOW_SIGNUP` without invite codes. The user store and session format remain compatible with go-login. The public privacy page is `/privacy`.
+
 - **75hard:** a one-way pull every 24 hours, restricted by `HARD75_ALLOWED_EMAILS`. The default allows only the owner's account. Connect a 75hard read-only token in Settings; imported rows retain source IDs. Historical photos, food, metrics, workouts, meditation and journal entries are imported. Water readings feed the daily metric, while reading, diet and custom task records appear as clearly labelled 75hard check-ins in the journal. Deleting a source-owned entry in lifeai may be undone by the next source sync.
 - **Strava:** connect using OAuth after configuring a Strava app. The callback is `https://<environment>/api/strava/callback`. The scheduler imports activities every 30 minutes. A connection in another application does not automatically authorize a separate OAuth app.
 - **Apple Health:** import `export.zip` or `export.xml` in Settings.

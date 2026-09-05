@@ -478,6 +478,7 @@ export function Landing() {
         </div>
         <div className="flex gap-6 text-xs text-ink-400">
           <Link to="/login">Sign in</Link>
+          <Link to="/privacy">Privacy</Link>
           <a href="/api/openapi.yaml">API</a>
           <a href="https://github.com/biswas-dev/lifeai">Source</a>
         </div>

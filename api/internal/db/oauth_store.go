@@ -118,9 +118,13 @@ func (s *OAuthStore) LinkOAuthProvider(ctx context.Context, userID int64, provid
 	if _, err := s.db.ExecContext(ctx, `
 		INSERT INTO oauth_providers (user_id, provider, provider_user_id)
 		VALUES (?, ?, ?)
-		ON CONFLICT(user_id, provider) DO UPDATE SET provider_user_id = excluded.provider_user_id`,
+		ON CONFLICT(user_id, provider) DO NOTHING`,
 		userID, provider, providerUserID); err != nil {
 		return nil, fmt.Errorf("oauth: link provider: %w", err)
+	}
+	linked, err := s.FindUserByProviderID(ctx, provider, providerUserID)
+	if err != nil || linked == nil || linked.ID != userID {
+		return nil, errors.New("oauth: account already linked to a different identity")
 	}
 	var u gologin.User
 	if err := s.db.QueryRowContext(ctx,

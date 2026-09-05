@@ -163,7 +163,11 @@ func main() {
 	})
 
 	var oauthHandler *gologin.Handler
-	if cfg.OAuthEnabled() {
+	var googleHandler *auth.GoogleHandler
+	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" && cfg.OAuthEnabled() {
+		googleHandler = auth.NewGoogleHandler(cfg, db.NewOAuthStore(database), logger)
+	}
+	if cfg.GitHubClientID != "" && cfg.OAuthEnabled() {
 		oauthCfg := &gologin.Config{
 			SuccessURL:  cfg.OAuthSuccessURL,
 			ErrorURL:    cfg.OAuthErrorURL,
@@ -171,13 +175,6 @@ func main() {
 			JWTSecret:   cfg.JWTSecret,
 			JWTExpiry:   cfg.JWTExpiry,
 			Logger:      logger,
-		}
-		if cfg.GoogleClientID != "" {
-			oauthCfg.Google = &gologin.OAuthProviderConfig{
-				ClientID:     cfg.GoogleClientID,
-				ClientSecret: cfg.GoogleClientSecret,
-				RedirectURL:  cfg.AppURL + "/api/auth/google/callback",
-			}
 		}
 		if cfg.GitHubClientID != "" {
 			oauthCfg.GitHub = &gologin.OAuthProviderConfig{
@@ -211,13 +208,15 @@ func main() {
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(map[string]bool{
 					"allow_signup": cfg.AllowSignup,
-					"google":       cfg.GoogleClientID != "" && cfg.OAuthEnabled(),
+					"google":       googleHandler != nil,
 					"github":       cfg.GitHubClientID != "" && cfg.OAuthEnabled(),
 				})
 			})
+			if googleHandler != nil {
+				r.Get("/google", googleHandler.Initiate)
+				r.Get("/google/callback", googleHandler.Callback)
+			}
 			if oauthHandler != nil {
-				r.Get("/google", oauthHandler.HandleGoogleInitiate)
-				r.Get("/google/callback", oauthHandler.HandleGoogleCallback)
 				r.Get("/github", oauthHandler.HandleGithubInitiate)
 				r.Get("/github/callback", oauthHandler.HandleGithubCallback)
 			}

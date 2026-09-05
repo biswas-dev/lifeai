@@ -27,7 +27,7 @@ export function AuthShell({
         </div>
         <div className="card p-6">{children}</div>
         <p className="mt-6 text-center text-xs text-ink-600">
-          lifeai · one record of your life
+          lifeai · one record of your life · <Link to="/privacy" className="underline">Privacy</Link>
         </p>
       </div>
     </div>
