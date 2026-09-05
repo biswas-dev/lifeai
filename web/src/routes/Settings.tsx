@@ -6,6 +6,7 @@ import { useAuth } from "../state/AuthContext";
 import { message, useResource } from "../lib/useResource";
 import { timeAgo } from "../lib/format";
 import { ErrorText, Field, PageHeader } from "../components/ui";
+import { SecuritySettings } from "../components/SecuritySettings";
 
 function Section({
   title,
@@ -664,6 +665,7 @@ export function Settings() {
       </div>
       <div className="space-y-5">
         <ProfileSettings />
+        <SecuritySettings />
         <GoalSettings />
         <HealthImports />
         {user?.hard75_eligible && <Hard75Settings />}

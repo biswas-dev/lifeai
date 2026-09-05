@@ -5,9 +5,11 @@ import type { AuthConfig } from "../lib/types";
 import { useAuth } from "../state/AuthContext";
 import { AuthShell, OAuthButtons } from "./AuthShell";
 import { ErrorText } from "../components/ui";
+import { passkeysSupported, signInWithPasskey } from "../lib/passkeys";
+import { rememberMFA, loginDestination } from "./VerifyMFA";
 
 export function Login() {
-  const { login } = useAuth();
+  const { login, loginWithToken } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +31,11 @@ export function Login() {
     setBusy(true);
     setError("");
     try {
-      await login(email, password);
-      navigate("/app", { replace: true });
+      const challenge = await login(email, password);
+      if (challenge) {
+        rememberMFA(challenge);
+        navigate("/verify", { state: { challenge }, replace: true });
+      } else navigate(loginDestination(), { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
     } finally {
@@ -82,6 +87,36 @@ export function Login() {
         </div>
       </form>
       <OAuthButtons config={config} />
+      {config?.passkeys &&
+        (passkeysSupported() ? (
+          <button
+            className="btn-ghost mt-3 w-full"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError("");
+              try {
+                const res = await signInWithPasskey();
+                await loginWithToken(res.token);
+                navigate(loginDestination(), { replace: true });
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : "Passkey sign-in failed.",
+                );
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Sign in with a passkey
+          </button>
+        ) : (
+          <p className="mt-4 text-xs text-ink-500">
+            Passkeys need an up-to-date browser with a secure connection.
+          </p>
+        ))}
     </AuthShell>
   );
 }

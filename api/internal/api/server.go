@@ -3,6 +3,7 @@
 package api
 
 import (
+	gologin "github.com/anchoo2kewl/go-login"
 	"go.uber.org/zap"
 
 	"github.com/biswas-dev/lifeai/api/internal/aifeatures"
@@ -14,12 +15,13 @@ import (
 
 // Server carries the dependencies every handler needs.
 type Server struct {
-	db     *db.DB
-	cfg    *config.Config
-	log    *zap.Logger
-	photos *photo.Store
-	ai     *aifeatures.Service
-	cipher *secret.Cipher
+	passkeys *gologin.Passkeys
+	db       *db.DB
+	cfg      *config.Config
+	log      *zap.Logger
+	photos   *photo.Store
+	ai       *aifeatures.Service
+	cipher   *secret.Cipher
 	// food, when set, estimates food photos off the request path. Nil is a
 	// valid state: without it a food photo is simply saved without numbers.
 	food *FoodEstimator
@@ -30,8 +32,18 @@ type Server struct {
 // NewServer builds a Server.
 func NewServer(database *db.DB, cfg *config.Config, log *zap.Logger, photos *photo.Store, aiSvc *aifeatures.Service, cipher *secret.Cipher) *Server {
 	SetLogger(log)
-	return &Server{db: database, cfg: cfg, log: log, photos: photos, ai: aiSvc, cipher: cipher}
+	s := &Server{db: database, cfg: cfg, log: log, photos: photos, ai: aiSvc, cipher: cipher}
+	if gologin.PasskeysUsable(cfg.AppURL) {
+		var err error
+		s.passkeys, err = gologin.NewPasskeys(gologin.PasskeyConfig{DisplayName: "Lifeai", AppURL: cfg.AppURL}, passkeyStore{database})
+		if err != nil {
+			log.Error("passkeys unavailable", zap.Error(err))
+		}
+	}
+	return s
 }
+
+func (s *Server) PasskeysAvailable() bool { return s.passkeys != nil }
 
 // SetFoodEstimator attaches the background estimator.
 func (s *Server) SetFoodEstimator(e *FoodEstimator) { s.food = e }

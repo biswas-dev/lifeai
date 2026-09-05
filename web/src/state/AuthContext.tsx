@@ -13,7 +13,7 @@ import type { User } from "../lib/types";
 interface AuthValue {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<string | undefined>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await api.login(email, password);
+    if ("mfa_required" in res) return res.challenge;
     api.setToken(res.token);
     setUser(res.user);
   }, []);
@@ -68,7 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithToken = useCallback(async (token: string) => {
     api.setToken(token);
-    setUser(await api.me());
+    try {
+      setUser(await api.me());
+    } catch (error) {
+      api.setToken(null);
+      setUser(null);
+      throw error;
+    }
   }, []);
 
   const logout = useCallback(() => {

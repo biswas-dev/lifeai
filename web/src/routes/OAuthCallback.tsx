@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../state/AuthContext";
 import { Spinner } from "../components/ui";
+import { rememberMFA, loginDestination } from "./VerifyMFA";
 
 /** Consume the session fragment, then immediately remove it from history. */
 export function OAuthCallback() {
@@ -14,14 +15,21 @@ export function OAuthCallback() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
-    const token = new URLSearchParams(window.location.hash.slice(1)).get("token") || params.get("token");
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const token = fragment.get("token") || params.get("token");
+    const challenge = fragment.get("challenge");
     window.history.replaceState(null, "", window.location.pathname);
+    if (challenge) {
+      rememberMFA(challenge);
+      navigate("/verify", { state: { challenge }, replace: true });
+      return;
+    }
     if (!token) {
       navigate("/login?error=Sign+in+failed", { replace: true });
       return;
     }
     loginWithToken(token)
-      .then(() => navigate("/app", { replace: true }))
+      .then(() => navigate(loginDestination(), { replace: true }))
       .catch(() => setError("That sign-in link was not valid."));
   }, [params, loginWithToken, navigate]);
 

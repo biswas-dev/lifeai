@@ -29,9 +29,19 @@ cd ../web && npm ci && npm test && npm run build
 
 `deployment/scripts/deploy.sh` documents required GitHub secrets. `SSH_KNOWN_HOSTS` pins the target host keys. It verifies container health and origin TLS; a separate GitHub-hosted job verifies the public Cloudflare endpoint and exact deployed commit from outside the origin network. For manual deployments, supply the same secrets as environment variables and run `bash deployment/scripts/deploy.sh staging` (or `uat` / `production`), then check the public endpoint. Deployments archive the committed HEAD.
 
-## Data connections
+## Sign-in
 
 Google sign-in is configured through the `lifeai-cc` Google Cloud project with callbacks at `https://<environment>/api/auth/google/callback`. Set each deployment's `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets. It requests only `openid email profile`, uses browser-bound state and PKCE, and returns the app session in a URL fragment. Verified Gmail and Workspace identities can link to existing accounts; other existing email addresses must use password sign-in. New Google users follow `ALLOW_SIGNUP` without invite codes. The user store and session format remain compatible with go-login. The public privacy page is `/privacy`.
+
+## Account security
+
+Settings → Account security supports authenticator-app TOTP and passkeys through go-login. Enrollment is optional and must be completed by the account owner on their own authenticator or device. TOTP is enabled only after verifying a code, then ten one-use recovery codes are shown for saving. Secrets are encrypted with `ENCRYPTION_KEY`; recovery codes are stored as hashes. Password, Google, and password-reset sign-ins issue a browser-bound MFA challenge instead of a session when TOTP is enabled. Challenges expire after five minutes, allow five attempts, and reject replays. Ten failed factor checks lock the account's code verification for five minutes.
+
+Passkeys require HTTPS (localhost works for development), use `APP_URL` for the exact origin and relying party, and require discoverable credentials plus user verification. Device PIN/biometric verification satisfies MFA without an extra TOTP code. Each environment has separate credentials. Only public keys and authenticator metadata are stored; private keys and biometrics stay with the device/provider. Registration, assertions, origin binding, backup flags, counters, and challenge reuse are covered by signed WebAuthn integration tests.
+
+Security changes require an interactive session authenticated within five minutes, revoke older browser sessions, and reject API/MCP tokens. Existing personal API tokens continue to work within their scopes. A verified session can manage `/api/security/`; public login ceremonies use `/api/auth/mfa/verify` and `/api/auth/passkeys/login/{begin,finish}`. The operator may run `admin reset-2fa <email>` after independently verifying ownership if the owner has lost both their authenticator and recovery codes. This leaves passkeys and password unchanged and revokes browser sessions.
+
+## Data connections
 
 - **75hard:** a one-way pull every 24 hours, restricted by `HARD75_ALLOWED_EMAILS`. The default allows only the owner's account. Connect a 75hard read-only token in Settings; imported rows retain source IDs. Historical photos, food, metrics, workouts, meditation and journal entries are imported. Water readings feed the daily metric, while reading, diet and custom task records appear as clearly labelled 75hard check-ins in the journal. Deleting a source-owned entry in lifeai may be undone by the next source sync.
 - **Strava:** connect using OAuth after configuring a Strava app. The callback is `https://<environment>/api/strava/callback`. The scheduler imports activities every 30 minutes. A connection in another application does not automatically authorize a separate OAuth app.

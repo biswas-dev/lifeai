@@ -19,10 +19,34 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface MFAChallenge {
+  mfa_required: true;
+  challenge: string;
+}
+export type AuthResult = AuthResponse | MFAChallenge;
+export interface SecurityStatus {
+  totp_enabled: boolean;
+  totp_available: boolean;
+  recovery_codes_remaining: number;
+  recent_authentication: boolean;
+  passkeys_available: boolean;
+  passkeys: {
+    id: string;
+    name: string;
+    created_at: string;
+    last_used_at: string;
+    backed_up: boolean;
+  }[];
+}
+export interface SecurityResult extends AuthResponse {
+  recovery_codes?: string[];
+}
+
 export interface AuthConfig {
   allow_signup: boolean;
   google: boolean;
   github: boolean;
+  passkeys?: boolean;
 }
 
 export interface Goals {

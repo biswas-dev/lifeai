@@ -24,6 +24,8 @@ import (
 // GoogleHandler uses go-login's user store and session format with browser-bound
 // state, PKCE, verified email linking, and Lifeai's open-registration policy.
 type GoogleHandler struct {
+	// CompleteLogin lets the application enforce its second-factor policy.
+	CompleteLogin                        func(http.ResponseWriter, *http.Request, int64)
 	cfg                                  *config.Config
 	store                                gologin.UserStore
 	logger                               *zap.Logger
@@ -126,6 +128,10 @@ func (h *GoogleHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		}
 		h.logger.Error("google account lookup failed", zap.Error(err))
 		h.fail(w, r, "Could not sign in to Lifeai. Please try again.")
+		return
+	}
+	if h.CompleteLogin != nil {
+		h.CompleteLogin(w, r, user.ID)
 		return
 	}
 	token, err := gologin.GenerateToken(user.ID, user.Email, h.cfg.JWTSecret, h.cfg.JWTExpiry)

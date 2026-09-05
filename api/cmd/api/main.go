@@ -166,6 +166,7 @@ func main() {
 	var googleHandler *auth.GoogleHandler
 	if cfg.GoogleClientID != "" && cfg.GoogleClientSecret != "" && cfg.OAuthEnabled() {
 		googleHandler = auth.NewGoogleHandler(cfg, db.NewOAuthStore(database), logger)
+		googleHandler.CompleteLogin = server.CompleteGoogleLogin
 	}
 	if cfg.GitHubClientID != "" && cfg.OAuthEnabled() {
 		oauthCfg := &gologin.Config{
@@ -191,6 +192,7 @@ func main() {
 	}
 
 	r.Route("/api", func(r chi.Router) {
+		server.MountSecurityRoutes(r)
 		r.Method(http.MethodGet, "/openapi.yaml", spec.Document.Handler())
 		r.Method(http.MethodHead, "/openapi.yaml", spec.Document.Handler())
 		r.Get("/version", func(w http.ResponseWriter, r *http.Request) {
@@ -209,6 +211,7 @@ func main() {
 				_ = json.NewEncoder(w).Encode(map[string]bool{
 					"allow_signup": cfg.AllowSignup,
 					"google":       googleHandler != nil,
+					"passkeys":     server.PasskeysAvailable(),
 					"github":       cfg.GitHubClientID != "" && cfg.OAuthEnabled(),
 				})
 			})

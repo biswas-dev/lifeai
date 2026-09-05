@@ -24,17 +24,29 @@ var ErrInvalidToken = errors.New("auth: invalid token")
 
 // Claims is the JWT payload. Wire-compatible with go-login.
 type Claims struct {
-	UserID int64  `json:"user_id"`
-	Email  string `json:"email"`
+	UserID          int64  `json:"user_id"`
+	Email           string `json:"email"`
+	SecurityVersion int64  `json:"security_version,omitempty"`
+	MFA             bool   `json:"mfa,omitempty"`
+	AuthTime        int64  `json:"auth_time,omitempty"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken mints an HS256 token for the user.
 func GenerateToken(userID int64, email, secret string, expiry time.Duration) (string, error) {
+	return GenerateSessionToken(userID, email, secret, expiry, 0, false)
+}
+
+// GenerateSessionToken retains go-login's claims and adds revocation and
+// completed-factor state. Challenge tokens are never valid session JWTs.
+func GenerateSessionToken(userID int64, email, secret string, expiry time.Duration, version int64, mfa bool) (string, error) {
 	now := time.Now()
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:          userID,
+		Email:           email,
+		SecurityVersion: version,
+		MFA:             mfa,
+		AuthTime:        now.Unix(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(now),

@@ -11,6 +11,9 @@ import type {
   APIToken,
   AuthConfig,
   AuthResponse,
+  AuthResult,
+  SecurityStatus,
+  SecurityResult,
   CoachNote,
   CreatedToken,
   Dashboard,
@@ -116,7 +119,7 @@ class ApiClient {
     });
   }
   login(email: string, password: string) {
-    return this.request<AuthResponse>("/api/auth/login", {
+    return this.request<AuthResult>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -133,9 +136,81 @@ class ApiClient {
     });
   }
   resetPassword(token: string, new_password: string) {
-    return this.request<AuthResponse>("/api/auth/reset-password", {
+    return this.request<AuthResult>("/api/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({ token, new_password }),
+    });
+  }
+
+  verifyMFA(challenge: string, code: string) {
+    return this.request<AuthResponse>("/api/auth/mfa/verify", {
+      method: "POST",
+      body: JSON.stringify({ challenge, code }),
+    });
+  }
+  securityStatus() {
+    return this.request<SecurityStatus>("/api/security/");
+  }
+  reauthenticate(password: string, code: string) {
+    return this.request<AuthResponse>("/api/security/reauth", {
+      method: "POST",
+      body: JSON.stringify({ password, code }),
+    });
+  }
+  beginTOTP() {
+    return this.request<{ challenge: string; secret: string; uri: string }>(
+      "/api/security/totp/begin",
+      { method: "POST" },
+    );
+  }
+  confirmTOTP(challenge: string, code: string) {
+    return this.request<SecurityResult>("/api/security/totp/confirm", {
+      method: "POST",
+      body: JSON.stringify({ challenge, code }),
+    });
+  }
+  disableTOTP() {
+    return this.request<SecurityResult>("/api/security/totp", {
+      method: "DELETE",
+    });
+  }
+  regenerateRecoveryCodes() {
+    return this.request<SecurityResult>("/api/security/recovery-codes", {
+      method: "POST",
+    });
+  }
+  beginPasskeyRegistration() {
+    return this.request<{ challenge: string; options: { publicKey: unknown } }>(
+      "/api/security/passkeys/begin",
+      { method: "POST" },
+    );
+  }
+  finishPasskeyRegistration(
+    challenge: string,
+    credential: unknown,
+    name: string,
+  ) {
+    return this.request<SecurityResult>("/api/security/passkeys/finish", {
+      method: "POST",
+      body: JSON.stringify({ challenge, credential, name }),
+    });
+  }
+  deletePasskey(id: string) {
+    return this.request<SecurityResult>(
+      `/api/security/passkeys/${encodeURIComponent(id)}`,
+      { method: "DELETE" },
+    );
+  }
+  beginPasskeyLogin() {
+    return this.request<{ challenge: string; options: { publicKey: unknown } }>(
+      "/api/auth/passkeys/login/begin",
+      { method: "POST" },
+    );
+  }
+  finishPasskeyLogin(challenge: string, credential: unknown) {
+    return this.request<AuthResponse>("/api/auth/passkeys/login/finish", {
+      method: "POST",
+      body: JSON.stringify({ challenge, credential }),
     });
   }
   me() {

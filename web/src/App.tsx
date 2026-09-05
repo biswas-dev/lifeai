@@ -9,6 +9,7 @@ import { ForgotPassword, ResetPassword } from "./routes/ForgotPassword";
 import { OAuthCallback } from "./routes/OAuthCallback";
 import { Today } from "./routes/Today";
 import { Privacy } from "./routes/Privacy";
+import { VerifyMFA } from "./routes/VerifyMFA";
 
 const DayDetail = lazy(() =>
   import("./routes/DayDetail").then((m) => ({ default: m.DayDetail })),
@@ -104,6 +105,7 @@ export default function App() {
             />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
+            <Route path="/verify" element={<VerifyMFA />} />
 
             <Route
               path="/app"

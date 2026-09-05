@@ -22,7 +22,8 @@ const (
 	// UserIDKey carries the authenticated user's id.
 	UserIDKey contextKey = "user_id"
 	// UserEmailKey carries the authenticated user's email.
-	UserEmailKey contextKey = "user_email"
+	UserEmailKey     contextKey = "user_email"
+	SessionClaimsKey contextKey = "session_claims"
 )
 
 // UserID returns the authenticated user's id from the request context.
@@ -68,15 +69,17 @@ func (s *Server) JWTAuth(next http.Handler) http.Handler {
 			respondError(w, http.StatusUnauthorized, "invalid or expired token", "unauthorized")
 			return
 		}
-		var deleted bool
+		var deleted, needsMFA bool
+		var version int64
 		err = s.db.QueryRowContext(r.Context(),
-			`SELECT deleted_at IS NOT NULL FROM users WHERE id = ?`, claims.UserID).Scan(&deleted)
-		if err != nil || deleted {
+			`SELECT deleted_at IS NOT NULL, security_version, totp_secret_enc <> '' FROM users WHERE id = ?`, claims.UserID).Scan(&deleted, &version, &needsMFA)
+		if err != nil || deleted || version != claims.SecurityVersion || (needsMFA && !claims.MFA) {
 			respondError(w, http.StatusUnauthorized, "account unavailable", "unauthorized")
 			return
 		}
 		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 		ctx = context.WithValue(ctx, UserEmailKey, claims.Email)
+		ctx = context.WithValue(ctx, SessionClaimsKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

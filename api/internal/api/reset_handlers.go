@@ -130,5 +130,5 @@ func (s *Server) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "could not load account", "internal")
 		return
 	}
-	s.issueToken(w, user)
+	s.completeLogin(w, r, user.ID, false, false)
 }

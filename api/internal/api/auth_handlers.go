@@ -97,7 +97,7 @@ func (s *Server) HandleSignup(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "could not load account", "internal")
 		return
 	}
-	s.issueToken(w, user)
+	s.completeLogin(w, r, user.ID, false, false)
 }
 
 type loginRequest struct {
@@ -138,7 +138,7 @@ func (s *Server) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "could not load account", "internal")
 		return
 	}
-	s.issueToken(w, user)
+	s.completeLogin(w, r, user.ID, false, false)
 }
 
 // HandleMe returns the signed-in account.
@@ -283,16 +283,6 @@ func (s *Server) HandleChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]bool{"ok": true})
-}
-
-func (s *Server) issueToken(w http.ResponseWriter, user User) {
-	token, err := auth.GenerateToken(user.ID, user.Email, s.cfg.JWTSecret, s.cfg.JWTExpiry)
-	if err != nil {
-		s.log.Error("generate token", zap.Error(err))
-		respondError(w, http.StatusInternalServerError, "could not issue token", "internal")
-		return
-	}
-	respondJSON(w, http.StatusOK, authResponse{Token: token, User: user})
 }
 
 func (s *Server) getUser(ctx context.Context, id int64) (User, error) {

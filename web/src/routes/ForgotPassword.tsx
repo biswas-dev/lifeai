@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../state/AuthContext";
 import { AuthShell } from "./AuthShell";
 import { ErrorText } from "../components/ui";
+import { rememberMFA } from "./VerifyMFA";
 
 export function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -91,6 +92,14 @@ export function ResetPassword() {
     setError("");
     try {
       const res = await api.resetPassword(token, password);
+      if ("mfa_required" in res) {
+        rememberMFA(res.challenge);
+        navigate("/verify", {
+          state: { challenge: res.challenge },
+          replace: true,
+        });
+        return;
+      }
       await loginWithToken(res.token);
       navigate("/app", { replace: true });
     } catch (err) {
@@ -103,7 +112,7 @@ export function ResetPassword() {
   return (
     <AuthShell
       title="Choose a new password"
-      subtitle="Then you'll be signed straight in"
+      subtitle="Then complete sign-in with your account’s security checks"
     >
       <form onSubmit={submit} className="space-y-4">
         <label className="block">

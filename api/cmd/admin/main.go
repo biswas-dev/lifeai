@@ -80,6 +80,32 @@ func main() {
 			fail("no such user")
 		}
 		fmt.Println("user is now an admin")
+	case "reset-2fa":
+		if len(os.Args) != 3 {
+			usage()
+		}
+		tx, err := database.Begin()
+		if err != nil {
+			fail("%v", err)
+		}
+		defer tx.Rollback()
+		var userID int64
+		if err = tx.QueryRow(`SELECT id FROM users WHERE lower(email)=? AND deleted_at IS NULL`, strings.ToLower(strings.TrimSpace(os.Args[2]))).Scan(&userID); err != nil {
+			fail("no such user")
+		}
+		if _, err = tx.Exec(`UPDATE users SET totp_secret_enc='',totp_last_step=-1,mfa_failures=0,mfa_locked_until=0,security_version=security_version+1 WHERE id=?`, userID); err != nil {
+			fail("%v", err)
+		}
+		if _, err = tx.Exec(`DELETE FROM recovery_codes WHERE user_id=?`, userID); err != nil {
+			fail("%v", err)
+		}
+		if _, err = tx.Exec(`DELETE FROM auth_challenges WHERE user_id=?`, userID); err != nil {
+			fail("%v", err)
+		}
+		if err = tx.Commit(); err != nil {
+			fail("%v", err)
+		}
+		fmt.Println("authenticator 2FA reset; browser sessions revoked; passkeys retained")
 	case "reset-75hard":
 		// Clears the last-sync marker so the next scheduler tick pulls again.
 		if len(os.Args) != 3 {
@@ -97,7 +123,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: admin users | reset-password <email> <password> | make-admin <email> | reset-75hard <email>")
+	fmt.Fprintln(os.Stderr, "usage: admin users | reset-password <email> <password> | reset-2fa <email> | make-admin <email> | reset-75hard <email>")
 	os.Exit(2)
 }
 
