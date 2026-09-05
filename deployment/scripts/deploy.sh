@@ -169,7 +169,7 @@ REMOTE_EOF
 # --- 5. Verify through the edge ---
 echo "=== Verifying https://$DOMAIN/api/health ==="
 sleep 3
-if curl -fsS "https://$DOMAIN/api/health"; then
+if curl -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"; then
   echo; echo "Health check passed"
 else
   echo "ERROR: edge health check failed"; exit 1
