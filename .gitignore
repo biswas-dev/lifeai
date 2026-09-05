@@ -1,0 +1,13 @@
+data/
+*.db
+*.db-wal
+*.db-shm
+api.log
+web/node_modules/
+web/dist/
+web/coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+api/coverage.out

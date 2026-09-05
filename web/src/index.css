@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    @apply h-full;
+    overflow-x: clip;
+  }
+  body {
+    @apply bg-ink-950 text-ink-200 antialiased;
+    min-height: 100%;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-tap-highlight-color: transparent;
+  }
+  #root {
+    min-height: 100dvh;
+  }
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+  ::selection {
+    @apply bg-vital-500/30;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl bg-ink-900 border border-ink-800;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 font-medium text-sm
+           transition-all duration-150 active:scale-[0.97] disabled:opacity-40
+           disabled:pointer-events-none select-none;
+  }
+  .btn-primary {
+    @apply btn bg-vital-500 text-white hover:bg-vital-400;
+  }
+  .btn-ghost {
+    @apply btn bg-ink-850 text-ink-200 hover:bg-ink-800 border border-ink-800;
+  }
+  .btn-danger {
+    @apply btn bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 border border-rose-500/25;
+  }
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-lg;
+  }
+  .field {
+    @apply w-full rounded-xl bg-ink-850 border border-ink-800 px-3.5 py-2.5 text-ink-100
+           placeholder:text-ink-500 outline-none transition
+           focus:border-vital-500/60 focus:ring-2 focus:ring-vital-500/20;
+  }
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wide text-ink-400 mb-1.5;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full border border-ink-700 bg-ink-850 px-2.5 py-1 text-xs text-ink-300;
+  }
+  .chip-active {
+    @apply border-vital-500/50 bg-vital-500/10 text-vital-400;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-vital-500;
+  }
+  .section-title {
+    @apply text-3xl font-semibold leading-tight tracking-[-0.04em] text-ink-100 md:text-5xl;
+  }
+  .card {
+    box-shadow: 0 2px 5px rgba(29, 53, 39, 0.018);
+  }
+  .app-shell .card {
+    border-radius: 16px;
+  }
+}
+html {
+  scroll-behavior: smooth;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #356b56;
+  outline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

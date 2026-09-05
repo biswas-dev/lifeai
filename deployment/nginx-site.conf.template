@@ -1,0 +1,109 @@
+# ${DOMAIN} — host nginx, in front of the lifeai container on 127.0.0.1:${PORT}.
+# Rendered by deployment/scripts/deploy.sh; TLS by certbot (Let's Encrypt).
+
+limit_req_zone $binary_remote_addr zone=${ZONE}_api:10m rate=100r/m;
+limit_req_zone $binary_remote_addr zone=${ZONE}_auth:10m rate=20r/m;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+server {
+    # The old "listen ... http2" form: the staging and UAT hosts run an nginx
+    # that predates the "http2 on" directive.
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name ${DOMAIN};
+
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    access_log /var/log/nginx/${DOMAIN}_access.log;
+    error_log  /var/log/nginx/${DOMAIN}_error.log;
+
+    client_max_body_size 30M;
+
+    error_page 502 503 504 /50x.html;
+    location = /50x.html {
+        internal;
+        default_type text/html;
+        return 503 '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Updating</title><meta http-equiv="refresh" content="5"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#07090c;color:#d6dbe4;font-family:-apple-system,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}h1{color:#19c896;font-weight:600}</style></head><body><div><h1>Updating lifeai</h1><p>Back in a moment.</p></div></body></html>';
+    }
+
+    location ~ ^/api/auth {
+        limit_req zone=${ZONE}_auth burst=10 nodelay;
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+    }
+
+    # Health exports are large and slow to process.
+    location /api/import/ {
+        client_max_body_size 2G;
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+        proxy_read_timeout 900s;
+        proxy_send_timeout 900s;
+        proxy_request_buffering off;
+    }
+
+    location /api/ {
+        limit_req zone=${ZONE}_api burst=30 nodelay;
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+        # AI calls and photo uploads on a slow connection need room.
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_request_buffering off;
+    }
+
+    location /mcp {
+        limit_req zone=${ZONE}_api burst=30 nodelay;
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    location /health {
+        proxy_pass http://127.0.0.1:${PORT};
+        access_log off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

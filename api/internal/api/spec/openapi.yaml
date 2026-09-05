@@ -1,0 +1,470 @@
+openapi: 3.1.0
+info:
+  title: lifeai API
+  version: 0.1.0
+  description: |
+    Food, training, body metrics, recipes and an AI coach — one record of a life.
+
+    Authenticate with a session token from `/api/auth/login`, or a personal API
+    token created at `/api/tokens` (prefix `lai_`), sent as `Authorization: Bearer …`.
+    Read tokens can call GET endpoints; write tokens can call everything except
+    token management and integration settings.
+servers:
+  - url: /api
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        code: { type: string }
+    Metrics:
+      type: object
+      properties:
+        weight_kg: { type: number, nullable: true }
+        body_fat_pct: { type: number, nullable: true }
+        resting_hr: { type: integer, nullable: true }
+        sleep_hours: { type: number, nullable: true }
+        steps: { type: integer, nullable: true }
+        water_ml: { type: integer, nullable: true }
+        mood: { type: integer, nullable: true, minimum: 1, maximum: 5 }
+        energy: { type: integer, nullable: true, minimum: 1, maximum: 5 }
+        note: { type: string }
+    Meal:
+      type: object
+      properties:
+        id: { type: integer }
+        date: { type: string, format: date }
+        name: { type: string }
+        slot: { type: string, enum: [breakfast, lunch, dinner, snack] }
+        kcal: { type: number }
+        protein_g: { type: number }
+        carbs_g: { type: number }
+        fat_g: { type: number }
+        source: { type: string }
+        estimate_status: { type: string }
+    Recipe:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        summary: { type: string }
+        minutes: { type: integer }
+        servings: { type: integer }
+        kcal_per_serving: { type: number }
+        protein_g: { type: number }
+        carbs_g: { type: number }
+        fat_g: { type: number }
+        ingredients: { type: array, items: { type: string } }
+        steps: { type: array, items: { type: string } }
+        tags: { type: array, items: { type: string } }
+        favourite: { type: boolean }
+    Workout:
+      type: object
+      properties:
+        id: { type: integer }
+        date: { type: string, format: date }
+        kind: { type: string }
+        activity: { type: string }
+        minutes: { type: integer }
+        kcal: { type: number, nullable: true }
+    Day:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        is_today: { type: boolean }
+        metrics: { $ref: '#/components/schemas/Metrics' }
+        meals: { type: array, items: { $ref: '#/components/schemas/Meal' } }
+        workouts: { type: array, items: { $ref: '#/components/schemas/Workout' } }
+        totals:
+          type: object
+          properties:
+            kcal: { type: number }
+            protein_g: { type: number }
+            carbs_g: { type: number }
+            fat_g: { type: number }
+            workout_minutes: { type: integer }
+            meditation_minutes: { type: integer }
+paths:
+  /health:
+    get:
+      security: []
+      summary: Liveness
+      responses:
+        '200': { description: OK }
+  /version:
+    get:
+      security: []
+      summary: Build metadata
+      responses:
+        '200': { description: OK }
+  /auth/login:
+    post:
+      security: []
+      summary: Sign in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200': { description: Token and user }
+        '401': { description: Bad credentials, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /auth/signup:
+    post:
+      security: []
+      summary: Create an account
+      responses:
+        '200': { description: Token and user }
+  /me:
+    get:
+      summary: The signed-in account
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Update name, timezone or weight unit
+      responses:
+        '200': { description: OK }
+  /goals:
+    get:
+      summary: Targets
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Replace targets
+      responses:
+        '200': { description: OK }
+  /today:
+    get:
+      summary: Today in the caller's timezone
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Day' } } } }
+  /days:
+    get:
+      summary: One summary per date in a range
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK }
+  /days/{date}:
+    parameters:
+      - { name: date, in: path, required: true, schema: { type: string }, description: YYYY-MM-DD or "today" }
+    get:
+      summary: One date in full
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Day' } } } }
+    patch:
+      summary: Record body metrics
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Metrics' }
+      responses:
+        '200': { description: OK }
+  /dashboard:
+    get:
+      summary: Today, the week and 30-day trends in one call
+      responses:
+        '200': { description: OK }
+  /stats:
+    get:
+      summary: Trends over a window
+      parameters:
+        - { name: days, in: query, schema: { type: integer, default: 90 } }
+      responses:
+        '200': { description: OK }
+  /meals:
+    post:
+      summary: Log a meal
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Meal' } } } }
+  /meals/{mealID}:
+    parameters:
+      - { name: mealID, in: path, required: true, schema: { type: integer } }
+    patch:
+      summary: Edit a meal
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete a meal
+      responses:
+        '200': { description: OK }
+  /meals/{mealID}/estimate:
+    post:
+      summary: Re-run a failed photo estimate
+      parameters:
+        - { name: mealID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '202': { description: Queued }
+  /recipes:
+    get:
+      summary: The recipe library
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: tag, in: query, schema: { type: string } }
+        - { name: favourite, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Recipe' } } } } }
+    post:
+      summary: Add a recipe
+      responses:
+        '201': { description: Created }
+  /recipes/{recipeID}:
+    parameters:
+      - { name: recipeID, in: path, required: true, schema: { type: integer } }
+    get:
+      summary: One recipe
+      responses:
+        '200': { description: OK }
+    patch:
+      summary: Edit a recipe
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete a recipe
+      responses:
+        '200': { description: OK }
+  /recipes/{recipeID}/cook:
+    post:
+      summary: Log a meal from a recipe
+      parameters:
+        - { name: recipeID, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date: { type: string, format: date }
+                slot: { type: string }
+                servings: { type: number }
+      responses:
+        '201': { description: Created }
+  /workouts:
+    post:
+      summary: Log a workout
+      responses:
+        '201': { description: Created }
+  /workouts/{workoutID}:
+    delete:
+      summary: Delete a workout
+      parameters:
+        - { name: workoutID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /meditations:
+    post:
+      summary: Log a meditation
+      responses:
+        '201': { description: Created }
+  /meditations/{meditationID}:
+    delete:
+      summary: Delete a meditation
+      parameters:
+        - { name: meditationID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /journal:
+    get:
+      summary: Journal entries, newest first
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Write an entry
+      responses:
+        '201': { description: Created }
+  /journal/{entryID}:
+    parameters:
+      - { name: entryID, in: path, required: true, schema: { type: integer } }
+    patch:
+      summary: Edit an entry
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Delete an entry
+      responses:
+        '200': { description: OK }
+  /photos:
+    get:
+      summary: Photos, newest first
+      parameters:
+        - { name: kind, in: query, schema: { type: string, enum: [progress, food, ingredients] } }
+        - { name: pose, in: query, schema: { type: string, enum: [front, side, back] } }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Upload a photo (multipart, field "file")
+      responses:
+        '201': { description: Created }
+  /photos/{photoID}/file:
+    get:
+      summary: The image bytes
+      parameters:
+        - { name: photoID, in: path, required: true, schema: { type: integer } }
+        - { name: size, in: query, schema: { type: string, enum: [thumb] } }
+      responses:
+        '200': { description: Image }
+  /ai/status:
+    get:
+      summary: Whether AI is enabled and quota left
+      responses:
+        '200': { description: OK }
+  /ai/food:
+    post:
+      summary: Estimate a food photo
+      responses:
+        '200': { description: Estimate }
+  /ai/recipes:
+    post:
+      summary: Suggest recipes for what is left of the day
+      responses:
+        '200': { description: Recipes }
+  /ai/import-recipe:
+    post:
+      summary: Structure pasted recipe text
+      responses:
+        '200': { description: Recipe }
+  /ai/plan:
+    post:
+      summary: A one-week plan from the record
+      responses:
+        '200': { description: Plan }
+  /ai/coach:
+    get:
+      summary: A short daily note
+      responses:
+        '200': { description: Note }
+  /tokens:
+    get:
+      summary: Personal API tokens
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create a token (session login only)
+      responses:
+        '201': { description: Created; the secret is shown once }
+  /tokens/{tokenID}:
+    delete:
+      summary: Revoke a token
+      parameters:
+        - { name: tokenID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /integrations/75hard:
+    get:
+      summary: 75hard connection status
+      responses:
+        '200': { description: OK }
+    put:
+      summary: Connect or update the 75hard bridge
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Disconnect 75hard
+      responses:
+        '200': { description: OK }
+  /integrations/75hard/sync:
+    post:
+      summary: Pull from 75hard now
+      responses:
+        '202': { description: Running }
+  /blood/reports:
+    get:
+      summary: List your blood reports
+      responses:
+        '200': { description: Success }
+    post:
+      summary: Create a report from markers or text
+      responses:
+        '201': { description: Success }
+  /blood/reports/upload:
+    post:
+      summary: Upload a PDF or text lab report (multipart file and optional taken_on)
+      responses:
+        '201': { description: Success }
+  /blood/reports/{reportID}:
+    parameters:
+      - { name: reportID, in: path, required: true, schema: { type: integer } }
+    get:
+      summary: Read a report and its markers
+      responses:
+        '200': { description: Success }
+    patch:
+      summary: Correct report metadata and markers
+      responses:
+        '200': { description: Success }
+    delete:
+      summary: Delete a report and its file
+      responses:
+        '200': { description: Success }
+  /blood/reports/{reportID}/file:
+    parameters:
+      - { name: reportID, in: path, required: true, schema: { type: integer } }
+    get:
+      summary: Download the original report PDF
+      responses:
+        '200': { description: Success }
+  /blood/markers:
+    get:
+      summary: Read marker trends; different units are separate series
+      responses:
+        '200': { description: Success }
+  /analysis/health:
+    get:
+      summary: Computed health summary without a model call
+      responses:
+        '200': { description: Success }
+  /import/apple-health:
+    post:
+      summary: Import Apple Health ZIP or XML (multipart file)
+      responses:
+        '200': { description: Success }
+  /import/samsung-health:
+    post:
+      summary: Import Samsung Health ZIP (multipart file)
+      responses:
+        '200': { description: Success }
+  /import/health:
+    post:
+      summary: Import metrics and workouts as JSON from a phone automation
+      responses:
+        '200': { description: Success }
+  /import/runs:
+    get:
+      summary: Read your import history
+      responses:
+        '200': { description: Success }
+  /strava/status:
+    get:
+      summary: Read your Strava connection status
+      responses:
+        '200': { description: Success }
+  /strava/connect:
+    post:
+      summary: Get the Strava OAuth consent URL
+      responses:
+        '200': { description: Success }
+  /strava/sync:
+    post:
+      summary: Import Strava activities now
+      responses:
+        '200': { description: Success }
+  /strava:
+    delete:
+      summary: Disconnect Strava; keep imported records
+      responses:
+        '200': { description: Success }

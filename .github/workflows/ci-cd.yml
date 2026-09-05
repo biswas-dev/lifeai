@@ -1,0 +1,159 @@
+# CI/CD for lifeai (lifeai.cc)
+#
+# Same shape as taskai: main → staging, uat → UAT, production → production.
+# Deploys SSH to the target and build natively there. Tests run on every
+# push to main and on pull requests.
+#
+# Runners (org-level, biswas-dev): staging-arm64, prod-x64-1/2.
+#
+# Required secrets (repo):
+#   STAGING_SSH_PRIVATE_KEY / UAT_SSH_PRIVATE_KEY / PRODUCTION_SSH_PRIVATE_KEY
+#   <ENV>_JWT_SECRET, <ENV>_OAUTH_STATE_SECRET, <ENV>_ENCRYPTION_KEY
+#   <ENV>_ADMIN_EMAIL, <ENV>_ADMIN_PASSWORD
+#   <ENV>_GOOGLE_CLIENT_ID/SECRET, <ENV>_LOGIN_GITHUB_CLIENT_ID/SECRET (optional)
+#   DEEPSEEK_API_KEY, NVIDIA_API_KEY, STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET (optional)
+#   CF_API_TOKEN, CF_ZONE_ID (optional)
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main, uat, production]
+  pull_request:
+    branches: [main, uat, production]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test-api:
+    name: API tests (Go)
+    runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.26'
+          cache-dependency-path: api/go.sum
+      - name: Vet
+        working-directory: api
+        run: go vet ./...
+      - name: Test
+        working-directory: api
+        run: go test ./...
+        timeout-minutes: 10
+
+  test-web:
+    name: Web tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install
+        working-directory: web
+        run: npm ci --no-audit --no-fund
+      - name: Typecheck
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: Test
+        working-directory: web
+        run: npx vitest run
+        timeout-minutes: 10
+      - name: Build
+        working-directory: web
+        run: npx vite build
+
+  deploy-staging:
+    needs: [test-api, test-web]
+    name: Deploy to staging
+    runs-on: [self-hosted, Linux, ARM64]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+    env:
+      STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+      STAGING_JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+      STAGING_OAUTH_STATE_SECRET: ${{ secrets.STAGING_OAUTH_STATE_SECRET }}
+      STAGING_ENCRYPTION_KEY: ${{ secrets.STAGING_ENCRYPTION_KEY }}
+      STAGING_ADMIN_EMAIL: ${{ secrets.STAGING_ADMIN_EMAIL }}
+      STAGING_ADMIN_PASSWORD: ${{ secrets.STAGING_ADMIN_PASSWORD }}
+      STAGING_GOOGLE_CLIENT_ID: ${{ secrets.STAGING_GOOGLE_CLIENT_ID }}
+      STAGING_GOOGLE_CLIENT_SECRET: ${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}
+      STAGING_LOGIN_GITHUB_CLIENT_ID: ${{ secrets.STAGING_LOGIN_GITHUB_CLIENT_ID }}
+      STAGING_LOGIN_GITHUB_CLIENT_SECRET: ${{ secrets.STAGING_LOGIN_GITHUB_CLIENT_SECRET }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+      STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash deployment/scripts/deploy.sh staging
+
+  deploy-uat:
+    needs: [test-api, test-web]
+    name: Deploy to UAT
+    runs-on: [self-hosted, Linux, ARM64]
+    if: github.ref == 'refs/heads/uat' && github.event_name == 'push'
+    environment: uat
+    env:
+      UAT_SSH_PRIVATE_KEY: ${{ secrets.UAT_SSH_PRIVATE_KEY }}
+      UAT_JWT_SECRET: ${{ secrets.UAT_JWT_SECRET }}
+      UAT_OAUTH_STATE_SECRET: ${{ secrets.UAT_OAUTH_STATE_SECRET }}
+      UAT_ENCRYPTION_KEY: ${{ secrets.UAT_ENCRYPTION_KEY }}
+      UAT_ADMIN_EMAIL: ${{ secrets.UAT_ADMIN_EMAIL }}
+      UAT_ADMIN_PASSWORD: ${{ secrets.UAT_ADMIN_PASSWORD }}
+      UAT_GOOGLE_CLIENT_ID: ${{ secrets.UAT_GOOGLE_CLIENT_ID }}
+      UAT_GOOGLE_CLIENT_SECRET: ${{ secrets.UAT_GOOGLE_CLIENT_SECRET }}
+      UAT_LOGIN_GITHUB_CLIENT_ID: ${{ secrets.UAT_LOGIN_GITHUB_CLIENT_ID }}
+      UAT_LOGIN_GITHUB_CLIENT_SECRET: ${{ secrets.UAT_LOGIN_GITHUB_CLIENT_SECRET }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+      STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash deployment/scripts/deploy.sh uat
+
+  deploy-production:
+    needs: [test-api, test-web]
+    name: Deploy to production
+    runs-on: [self-hosted, Linux, X64, prod]
+    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    environment: production
+    env:
+      PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+      PRODUCTION_JWT_SECRET: ${{ secrets.PRODUCTION_JWT_SECRET }}
+      PRODUCTION_OAUTH_STATE_SECRET: ${{ secrets.PRODUCTION_OAUTH_STATE_SECRET }}
+      PRODUCTION_ENCRYPTION_KEY: ${{ secrets.PRODUCTION_ENCRYPTION_KEY }}
+      PRODUCTION_ADMIN_EMAIL: ${{ secrets.PRODUCTION_ADMIN_EMAIL }}
+      PRODUCTION_ADMIN_PASSWORD: ${{ secrets.PRODUCTION_ADMIN_PASSWORD }}
+      PRODUCTION_GOOGLE_CLIENT_ID: ${{ secrets.PRODUCTION_GOOGLE_CLIENT_ID }}
+      PRODUCTION_GOOGLE_CLIENT_SECRET: ${{ secrets.PRODUCTION_GOOGLE_CLIENT_SECRET }}
+      PRODUCTION_LOGIN_GITHUB_CLIENT_ID: ${{ secrets.PRODUCTION_LOGIN_GITHUB_CLIENT_ID }}
+      PRODUCTION_LOGIN_GITHUB_CLIENT_SECRET: ${{ secrets.PRODUCTION_LOGIN_GITHUB_CLIENT_SECRET }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+      STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+      STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash deployment/scripts/deploy.sh production

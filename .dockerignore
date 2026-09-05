@@ -1,0 +1,11 @@
+.git
+.env*
+!.env.example
+data
+web/node_modules
+web/dist
+web/coverage
+api.log
+*.db
+*.db-*
+.DS_Store
