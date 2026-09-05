@@ -253,7 +253,8 @@ function Hard75Settings() {
           {st.last_summary && (
             <p className="text-xs text-ink-400">
               Last pull: {st.last_summary.days} days, {st.last_summary.photos}{" "}
-              photos, {st.last_summary.meals} meals.
+              photos, {st.last_summary.meals} meals,{" "}
+              {st.last_summary.check_ins || 0} daily check-ins.
             </p>
           )}
           {!st.connected ? (

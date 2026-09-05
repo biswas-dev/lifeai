@@ -133,6 +133,7 @@ type Meditation struct {
 
 // Day is everything logged on one day of a program.
 type Day struct {
+	ProgramID   int64        `json:"program_id"`
 	DayNumber   int          `json:"day_number"`
 	Date        string       `json:"date"`
 	Status      string       `json:"status"`
@@ -143,6 +144,17 @@ type Day struct {
 	Meals       []Meal       `json:"meals"`
 	Workouts    []Workout    `json:"workouts"`
 	Meditations []Meditation `json:"meditations"`
+	Entries     []Entry      `json:"entries"`
+}
+
+// Entry preserves the challenge's daily habit readings and checkboxes.
+type Entry struct {
+	Key   string   `json:"key"`
+	Title string   `json:"title"`
+	Unit  string   `json:"unit"`
+	Value *float64 `json:"value"`
+	Note  string   `json:"note"`
+	Done  bool     `json:"done"`
 }
 
 // JournalEntry is a typed or scanned page.

@@ -330,6 +330,7 @@ export interface CreatedToken {
 }
 
 export interface SyncSummary {
+  check_ins?: number;
   programs: number;
   days: number;
   photos: number;

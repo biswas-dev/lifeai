@@ -31,7 +31,7 @@ cd ../web && npm ci && npm test && npm run build
 
 ## Data connections
 
-- **75hard:** a one-way pull every 24 hours, restricted by `HARD75_ALLOWED_EMAILS`. The default allows only the owner's account. Connect a 75hard read-only token in Settings; imported rows retain source IDs. Historical photos, food, metrics, workouts, meditation and journal entries are imported. Deleting a source-owned entry in lifeai may be undone by the next source sync.
+- **75hard:** a one-way pull every 24 hours, restricted by `HARD75_ALLOWED_EMAILS`. The default allows only the owner's account. Connect a 75hard read-only token in Settings; imported rows retain source IDs. Historical photos, food, metrics, workouts, meditation and journal entries are imported. Water readings feed the daily metric, while reading, diet and custom task records appear as clearly labelled 75hard check-ins in the journal. Deleting a source-owned entry in lifeai may be undone by the next source sync.
 - **Strava:** connect using OAuth after configuring a Strava app. The callback is `https://<environment>/api/strava/callback`. The scheduler imports activities every 30 minutes. A connection in another application does not automatically authorize a separate OAuth app.
 - **Apple Health:** import `export.zip` or `export.xml` in Settings.
 - **Samsung Health:** import its data export ZIP in Settings.

@@ -43,6 +43,7 @@ type SyncSummary struct {
 	Workouts    int    `json:"workouts"`
 	Meditations int    `json:"meditations"`
 	Journal     int    `json:"journal"`
+	CheckIns    int    `json:"check_ins"`
 	Requests    int    `json:"requests"`
 	DurationSec int    `json:"duration_sec"`
 	FinishedAt  string `json:"finished_at"`
@@ -314,7 +315,7 @@ func (h *Hard75Syncer) pullPhotos(ctx context.Context, userID int64, c *hard75.C
 	}
 	rows.Close()
 
-	photos, err := c.Photos(ctx, "", 1000)
+	photos, err := c.Photos(ctx, "", 500)
 	if err != nil {
 		return nil, err
 	}
@@ -391,6 +392,9 @@ func (h *Hard75Syncer) importDay(ctx context.Context, userID int64, d *hard75.Da
 		return err
 	}
 	sum.Days++
+	if err := h.importCheckIn(ctx, userID, d, sum); err != nil {
+		return err
+	}
 
 	for _, m := range d.Meals {
 		if m.EstimateStatus == "pending" || m.EstimateStatus == "failed" {
@@ -495,6 +499,69 @@ func (h *Hard75Syncer) importDay(ctx context.Context, userID int64, d *hard75.Da
 		}
 	}
 	return nil
+}
+
+// Keep source habit check-ins in the journal so reading, diet and custom
+// tasks remain available to the UI and MCP. Water also feeds the daily metric.
+func (h *Hard75Syncer) importCheckIn(ctx context.Context, userID int64, d *hard75.Day, sum *SyncSummary) error {
+	var lines []string
+	var samples []health.Sample
+	for _, e := range d.Entries {
+		if !e.Done && e.Value == nil && strings.TrimSpace(e.Note) == "" {
+			continue
+		}
+		title := strings.TrimSpace(e.Title)
+		if title == "" {
+			title = e.Key
+		}
+		line := "- " + title
+		if e.Value != nil {
+			line += ": " + strconv.FormatFloat(*e.Value, 'f', -1, 64)
+			if unit := strings.TrimSpace(e.Unit); unit != "" {
+				line += " " + unit
+			}
+		}
+		if e.Done {
+			line += " (completed)"
+		}
+		if note := strings.TrimSpace(e.Note); note != "" {
+			line += " — " + note
+		}
+		lines = append(lines, line)
+		if e.Key == "water" && e.Value != nil && *e.Value >= 0 {
+			factor := 0.0
+			switch strings.ToLower(strings.TrimSpace(e.Unit)) {
+			case "oz", "fl oz":
+				factor = 29.5735295625 // US fluid ounces, as used by 75hard.
+			case "ml":
+				factor = 1
+			case "l", "liters", "litres":
+				factor = 1000
+			}
+			if factor != 0 {
+				samples = append(samples, health.Sample{Source: "75hard", Date: d.Date, Metric: health.MetricWater, Value: float64(int(*e.Value*factor + 0.5))})
+			}
+		}
+	}
+	if len(samples) > 0 {
+		if err := h.s.applyImport(ctx, userID, "75hard", samples, nil, &ImportSummary{}); err != nil {
+			return err
+		}
+	}
+	if len(lines) == 0 {
+		return nil
+	}
+	body := "Daily check-in imported from 75hard.\n\n" + strings.Join(lines, "\n")
+	_, err := h.s.db.ExecContext(ctx, `
+		INSERT INTO journal_entries (user_id, on_date, title, body, source, external_id)
+		VALUES (?, ?, '75hard check-in', ?, '75hard', ?)
+		ON CONFLICT(user_id, source, external_id) WHERE external_id <> '' DO UPDATE SET
+			body = excluded.body, on_date = excluded.on_date, updated_at = CURRENT_TIMESTAMP`,
+		userID, d.Date, body, fmt.Sprintf("checkin:%d:%d", d.ProgramID, d.DayNumber))
+	if err == nil {
+		sum.CheckIns++
+	}
+	return err
 }
 
 // MapWorkoutKind turns a 75hard workout (indoor/outdoor plus a free-text
