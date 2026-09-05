@@ -27,7 +27,7 @@ cd ../web && npm ci && npm test && npm run build
 
 `main` deploys staging.lifeai.cc, `uat` deploys uat.lifeai.cc, and `production` deploys lifeai.cc. Both test jobs must pass before a deployment starts. Pull requests use GitHub-hosted test runners; deployment uses the owner's existing runners and hosts. Host nginx terminates TLS and connects to loopback port 13440. SQLite and uploads live outside the source directory in `data/` and survive redeploys.
 
-`deployment/scripts/deploy.sh` documents required GitHub secrets. `SSH_KNOWN_HOSTS` pins the target host keys. For manual deployments, supply the same secrets as environment variables and run `bash deployment/scripts/deploy.sh staging` (or `uat` / `production`). Deployments archive the committed HEAD.
+`deployment/scripts/deploy.sh` documents required GitHub secrets. `SSH_KNOWN_HOSTS` pins the target host keys. It verifies container health and origin TLS; a separate GitHub-hosted job verifies the public Cloudflare endpoint and exact deployed commit from outside the origin network. For manual deployments, supply the same secrets as environment variables and run `bash deployment/scripts/deploy.sh staging` (or `uat` / `production`), then check the public endpoint. Deployments archive the committed HEAD.
 
 ## Data connections
 

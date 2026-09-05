@@ -166,15 +166,15 @@ $SSH "bash -s" <<REMOTE_EOF
   exit 1
 REMOTE_EOF
 
-# --- 5. Verify through the edge ---
-echo "=== Verifying https://$DOMAIN/api/health ==="
+# --- 5. Verify host nginx and TLS directly ---
+# Public Cloudflare verification runs from a GitHub-hosted job, outside
+# the origin's network. This avoids unreliable origin-to-edge hairpin routes.
+echo "=== Verifying origin TLS for https://$DOMAIN/api/health ==="
 sleep 3
-# These deploy hosts use IPv4. Their IPv6 route can reach Cloudflare while
-# failing its origin connection, so check the application's configured path.
-if curl -4 -fsS --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"; then
+if curl -4 -fsS --resolve "$DOMAIN:443:$SERVER_IP" --connect-timeout 10 --max-time 30 --retry 3 --retry-delay 3 --retry-all-errors "https://$DOMAIN/api/health"; then
   echo; echo "Health check passed"
 else
-  echo "ERROR: edge health check failed"; exit 1
+  echo "ERROR: origin TLS health check failed"; exit 1
 fi
 
 if [ -n "${CF_API_TOKEN:-}" ] && [ -n "${CF_ZONE_ID:-}" ]; then
