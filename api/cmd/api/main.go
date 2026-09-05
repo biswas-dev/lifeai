@@ -34,6 +34,23 @@ import (
 // aiRequestTimeout bounds a model-backed request.
 const aiRequestTimeout = 4 * time.Minute
 
+const healthImportTimeout = 15 * time.Minute
+
+// Choose the deadline once: a nested timeout cannot extend its parent's
+// shorter deadline, even when the inner route allows a long-running import.
+func authenticatedTimeout(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		duration := time.Minute
+		switch {
+		case strings.HasPrefix(r.URL.Path, "/api/import/"):
+			duration = healthImportTimeout
+		case strings.HasPrefix(r.URL.Path, "/api/ai/"), r.URL.Path == "/api/blood/reports/upload":
+			duration = aiRequestTimeout
+		}
+		middleware.Timeout(duration)(next).ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	cfg := config.Load()
 	logger := config.MustInitLogger(cfg.Env, cfg.LogLevel)
@@ -216,7 +233,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(server.JWTAuth)
 			r.Use(api.RateLimitMiddleware(cfg.RateLimitPerMin))
-			r.Use(middleware.Timeout(60 * time.Second))
+			r.Use(authenticatedTimeout)
 
 			r.Get("/me", server.HandleMe)
 			r.Patch("/me", server.HandleUpdateProfile)
@@ -283,7 +300,6 @@ func main() {
 			// Health imports. The export files are large, so these get a
 			// long timeout of their own.
 			r.Group(func(r chi.Router) {
-				r.Use(middleware.Timeout(15 * time.Minute))
 				r.Post("/import/apple-health", server.HandleImportApple)
 				r.Post("/import/samsung-health", server.HandleImportSamsung)
 				r.Post("/import/health", server.HandleImportWebhook)
@@ -300,7 +316,6 @@ func main() {
 			// large model actually takes.
 			r.Group(func(r chi.Router) {
 				r.Use(api.RateLimitMiddleware(20))
-				r.Use(middleware.Timeout(aiRequestTimeout))
 				r.Post("/ai/food", server.HandleAnalyzeFood)
 				r.Post("/ai/recipes", server.HandleSuggestRecipes)
 				r.Post("/ai/import-recipe", server.HandleImportRecipe)
@@ -320,7 +335,7 @@ func main() {
 		Addr:              ":" + cfg.Port,
 		Handler:           r,
 		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout:      aiRequestTimeout + 30*time.Second,
+		WriteTimeout:      healthImportTimeout + 30*time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
 
