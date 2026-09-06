@@ -59,6 +59,8 @@ Daily readings resolve by source precedence (manual, Apple, Samsung, webhook, Ga
 
 Upload PDF/text reports or enter values manually. Dynacare text reports have a deterministic parser; other textual reports can use optional AI extraction. Scanned PDFs without text need manual entry. Always review extracted markers against the original report. The 90-day milestone is a tracking aid, not a prescribed testing schedule. Nutrition estimates and AI suggestions need review.
 
+Blood work charts show the first reading as a baseline, then connect later results using collection dates across years. Key markers lead the page; All markers and search expose every numeric test, with different units kept separate. Red results and clickable “!” flags open the recorded range, an explanation and reading history. HbA1c and ALT include general education linked to MedlinePlus. Each historical reading retains its own reference range; chart shading is explicitly the latest lab range. Flags are not diagnoses or personal treatment targets.
+
 `GET /api/analysis/health` and all `/mcp` tools use stored records without spending model calls. Built-in coaching and meal estimates require a configured AI provider. Visiting the dashboard does not generate a paid coach response.
 
 ## MCP

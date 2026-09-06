@@ -430,9 +430,17 @@ export interface MarkerSeries {
   flag: string;
   ref_low: number | null;
   ref_high: number | null;
-  points: (Point & { flag: string; report_id: number })[];
-  latest?: Point;
+  ref_text?: string;
+  points: MarkerPoint[];
+  latest?: MarkerPoint;
   change?: number;
+}
+export interface MarkerPoint extends Point {
+  flag: string;
+  report_id: number;
+  ref_low?: number | null;
+  ref_high?: number | null;
+  ref_text?: string;
 }
 export interface HealthSummary {
   generated_at: string;

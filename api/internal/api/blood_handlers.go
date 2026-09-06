@@ -386,6 +386,7 @@ type MarkerSeries struct {
 	Watch         bool              `json:"watch"`
 	RefLow        *float64          `json:"ref_low"`
 	RefHigh       *float64          `json:"ref_high"`
+	RefText       string            `json:"ref_text"`
 	Points        []MarkerPoint     `json:"points"`
 	Latest        *MarkerPoint      `json:"latest,omitempty"`
 	Change        *float64          `json:"change,omitempty"`
@@ -395,10 +396,13 @@ type MarkerSeries struct {
 
 // MarkerPoint is one reading.
 type MarkerPoint struct {
-	Date     string  `json:"date"`
-	Value    float64 `json:"value"`
-	Flag     string  `json:"flag"`
-	ReportID int64   `json:"report_id"`
+	Date     string   `json:"date"`
+	Value    float64  `json:"value"`
+	Flag     string   `json:"flag"`
+	ReportID int64    `json:"report_id"`
+	RefLow   *float64 `json:"ref_low"`
+	RefHigh  *float64 `json:"ref_high"`
+	RefText  string   `json:"ref_text"`
 }
 
 // HandleMarkerSeries returns every marker's history, for the charts.
@@ -414,10 +418,10 @@ func (s *Server) HandleMarkerSeries(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) markerSeries(ctx context.Context, userID int64) ([]MarkerSeries, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT m.code, m.name, m.unit, m.value, m.ref_low, m.ref_high, m.flag, r.taken_on, r.id
+		SELECT m.code, m.name, m.unit, m.value, m.ref_low, m.ref_high, m.ref_text, m.flag, r.taken_on, r.id
 		  FROM blood_markers m JOIN blood_reports r ON r.id = m.report_id
-		 WHERE r.user_id = ? AND m.code <> '' AND m.value IS NOT NULL
-		 ORDER BY r.taken_on ASC, r.id ASC`, userID)
+		 WHERE r.user_id = ? AND m.value IS NOT NULL
+		 ORDER BY r.taken_on ASC, r.id ASC, m.id ASC`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -426,13 +430,17 @@ func (s *Server) markerSeries(ctx context.Context, userID int64) ([]MarkerSeries
 	var order []string
 	for rows.Next() {
 		var (
-			code, name, unit, flag, date string
-			value                        float64
-			low, high                    sql.NullFloat64
-			reportID                     int64
+			code, name, unit, refText, flag, date string
+			value                                 float64
+			low, high                             sql.NullFloat64
+			reportID                              int64
 		)
-		if err := rows.Scan(&code, &name, &unit, &value, &low, &high, &flag, &date, &reportID); err != nil {
+		if err := rows.Scan(&code, &name, &unit, &value, &low, &high, &refText, &flag, &date, &reportID); err != nil {
 			return nil, err
+		}
+		// Older imported reports may contain numeric tests outside the canonical catalog.
+		if code == "" {
+			code = "custom:" + strings.ToLower(strings.TrimSpace(name))
 		}
 		seriesKey := code + "|" + unit
 		ms, ok := byCode[seriesKey]
@@ -444,9 +452,13 @@ func (s *Server) markerSeries(ctx context.Context, userID int64) ([]MarkerSeries
 			byCode[seriesKey] = ms
 			order = append(order, seriesKey)
 		}
-		ms.Points = append(ms.Points, MarkerPoint{Date: date, Value: value, Flag: flag, ReportID: reportID})
+		ms.Points = append(ms.Points, MarkerPoint{Date: date, Value: value, Flag: flag, ReportID: reportID, RefLow: floatPtr(low), RefHigh: floatPtr(high), RefText: refText})
 		// The latest report's range and unit win.
 		ms.RefLow, ms.RefHigh, ms.Unit, ms.Flag = floatPtr(low), floatPtr(high), unit, flag
+		ms.RefText = refText
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	out := make([]MarkerSeries, 0, len(order))
 	// Definitions order first, then anything unknown.

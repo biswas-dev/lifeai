@@ -2,6 +2,18 @@ package blood
 
 import "testing"
 
+func TestParseResultPreservesAbnormalFlag(t *testing.T) {
+	for _, input := range []string{"42 U/L abnormal", "Abnormal"} {
+		value, unit, flag := ParseResult(input)
+		if flag != "abnormal" {
+			t.Fatalf("ParseResult(%q) flag = %q, want abnormal", input, flag)
+		}
+		if input == "42 U/L abnormal" && (value == nil || *value != 42 || unit != "U/L") {
+			t.Fatalf("abnormal suffix corrupted value or unit: %v %q", value, unit)
+		}
+	}
+}
+
 const dynacareSample = `
                 NAME:    Example Patient                                            DATE SAMPLES COLLECTED:     2026 Aug 24, 12:28
                                                                                                   ORDERED BY:   Dr. Example Clinician

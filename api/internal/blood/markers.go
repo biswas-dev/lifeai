@@ -186,7 +186,7 @@ func ParseRange(s string) (low, high *float64, unit string) {
 func ParseResult(s string) (value *float64, unit, flag string) {
 	s = strings.TrimSpace(s)
 	lower := strings.ToLower(s)
-	for _, f := range []string{"see details", "uninterpreted", "unavailable", "pending", "normal", "abnormal", "high", "low", "positive", "negative"} {
+	for _, f := range []string{"see details", "uninterpreted", "unavailable", "pending", "abnormal", "normal", "high", "low", "positive", "negative"} {
 		if strings.HasSuffix(lower, f) {
 			flag = strings.ReplaceAll(f, " ", "_")
 			s = strings.TrimSpace(s[:len(s)-len(f)])
