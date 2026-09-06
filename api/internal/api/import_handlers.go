@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -220,60 +219,9 @@ func (s *Server) applyImport(ctx context.Context, userID int64, source string, s
 	return nil
 }
 
-// importWorkout inserts a session unless the same effort is already there
-// from any source. Returns whether a row was inserted.
-func (s *Server) importWorkout(ctx context.Context, userID int64, wk health.WorkoutImport) (bool, error) {
-	if !dates.Valid(wk.Date) || wk.Minutes <= 0 {
-		return false, nil
-	}
-	// Already imported from this source: refresh the numbers.
-	var existingID int64
-	err := s.db.QueryRowContext(ctx, `SELECT id FROM workouts WHERE user_id = ? AND source = ? AND external_id = ?`, userID, wk.Source, wk.ExternalID).Scan(&existingID)
-	if err == nil {
-		_, err = s.db.ExecContext(ctx, `UPDATE workouts SET kind = ?, activity = ?, minutes = ?, kcal = COALESCE(?, kcal), distance_km = COALESCE(?, distance_km), avg_hr = COALESCE(?, avg_hr) WHERE id = ?`,
-			wk.Kind, wk.Activity, wk.Minutes, nullFloat(wk.Kcal), nullFloat(wk.DistanceKm), nullInt(wk.AvgHR), existingID)
-		return false, err
-	}
-	if err != sql.ErrNoRows {
-		return false, err
-	}
-	// The same effort seen by another device: keep the first, fill gaps.
-	rows, err := s.db.QueryContext(ctx, `SELECT id, minutes, started_at FROM workouts WHERE user_id = ? AND on_date IN (?, ?, ?) AND started_at IS NOT NULL`,
-		userID, wk.Date, dates.AddDays(wk.Date, -1), dates.AddDays(wk.Date, 1))
-	if err != nil {
-		return false, err
-	}
-	dupID := int64(0)
-	for rows.Next() {
-		var id int64
-		var mins int
-		var started sql.NullString
-		if rows.Scan(&id, &mins, &started) != nil || !started.Valid {
-			continue
-		}
-		st, ok := parseDBTime(started.String)
-		if ok && health.SameWorkout(wk.StartedAt, wk.Minutes, st, mins) {
-			dupID = id
-			break
-		}
-	}
-	rows.Close()
-	if dupID != 0 {
-		_, err = s.db.ExecContext(ctx, `UPDATE workouts SET kcal = COALESCE(kcal, ?), distance_km = COALESCE(distance_km, ?), avg_hr = COALESCE(avg_hr, ?) WHERE id = ?`,
-			nullFloat(wk.Kcal), nullFloat(wk.DistanceKm), nullInt(wk.AvgHR), dupID)
-		return false, err
-	}
-	_, err = s.db.ExecContext(ctx, `
-		INSERT INTO workouts (user_id, on_date, kind, activity, minutes, kcal, distance_km, avg_hr, notes, started_at, source, external_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		userID, wk.Date, wk.Kind, strings.TrimSpace(wk.Activity), wk.Minutes, nullFloat(wk.Kcal), nullFloat(wk.DistanceKm), nullInt(wk.AvgHR),
-		strings.TrimSpace(wk.Notes), nullableStartedAt(wk.StartedAt), wk.Source, wk.ExternalID)
-	return err == nil, err
-}
-
 // parseDBTime reads the timestamp forms SQLite hands back.
 func parseDBTime(s string) (time.Time, bool) {
-	for _, layout := range []string{time.RFC3339Nano, time.RFC3339, "2006-01-02 15:04:05.999999999-07:00", "2006-01-02 15:04:05-07:00", "2006-01-02 15:04:05.999999999", "2006-01-02 15:04:05", "2006-01-02T15:04:05Z"} {
+	for _, layout := range []string{time.RFC3339Nano, time.RFC3339, "2006-01-02 15:04:05.999999999 -0700 MST", "2006-01-02 15:04:05.999999999-07:00", "2006-01-02 15:04:05-07:00", "2006-01-02 15:04:05.999999999", "2006-01-02 15:04:05", "2006-01-02T15:04:05Z"} {
 		if t, err := time.Parse(layout, s); err == nil {
 			return t, true
 		}
@@ -319,7 +267,7 @@ func (s *Server) resolveDay(ctx context.Context, userID int64, date string) erro
 		if isManual[metric] || !health.ValidMetric(metric) {
 			continue
 		}
-		if _, err := s.db.ExecContext(ctx, fmt.Sprintf(`UPDATE days SET %s = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND on_date = ?`, metric), b.value, userID, date); err != nil {
+		if _, err := s.db.ExecContext(ctx, fmt.Sprintf(`UPDATE days SET %s = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND on_date = ? AND instr(','||manual_fields||',',?)=0`, metric), b.value, userID, date, ","+metric+","); err != nil {
 			return err
 		}
 	}
@@ -328,22 +276,19 @@ func (s *Server) resolveDay(ctx context.Context, userID int64, date string) erro
 
 // markManual records fields a person typed, so imports leave them alone.
 func (s *Server) markManual(ctx context.Context, userID int64, date string, fields []string) error {
-	var manual string
-	_ = s.db.QueryRowContext(ctx, `SELECT manual_fields FROM days WHERE user_id = ? AND on_date = ?`, userID, date).Scan(&manual)
-	set := map[string]bool{}
-	for _, f := range strings.Split(manual, ",") {
-		if f = strings.TrimSpace(f); f != "" {
-			set[f] = true
+	seen := map[string]bool{}
+	parts := []string{"manual_fields"}
+	args := []any{}
+	for _, field := range fields {
+		if seen[field] {
+			continue
 		}
+		seen[field] = true
+		parts = append(parts, "CASE WHEN instr(','||manual_fields||',',?)>0 THEN '' ELSE ? END")
+		args = append(args, ","+field+",", ","+field)
 	}
-	for _, f := range fields {
-		set[f] = true
-	}
-	out := make([]string, 0, len(set))
-	for f := range set {
-		out = append(out, f)
-	}
-	_, err := s.db.ExecContext(ctx, `UPDATE days SET manual_fields = ? WHERE user_id = ? AND on_date = ?`, strings.Join(out, ","), userID, date)
+	args = append(args, userID, date)
+	_, err := s.db.ExecContext(ctx, `UPDATE days SET manual_fields=trim(`+strings.Join(parts, "||")+`,',') WHERE user_id=? AND on_date=?`, args...)
 	return err
 }
 

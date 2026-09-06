@@ -10,8 +10,6 @@ import {
   CameraIcon,
   DumbbellIcon,
   LotusIcon,
-  PenIcon,
-  PlusIcon,
   ScaleIcon,
   TrashIcon,
 } from "./Icons";
@@ -23,6 +21,8 @@ import {
   WorkoutSheet,
 } from "./sheets";
 import { PhotoUpload } from "./PhotoUpload";
+import { ActivityGrid } from "./ActivityGrid";
+import { waterDisplay } from "../lib/water";
 
 /** The day as a page: totals against goals, then everything logged. */
 export function DayView({
@@ -66,6 +66,14 @@ export function DayView({
   return (
     <div className="space-y-5">
       <ErrorText>{error}</ErrorText>
+      <ActivityGrid
+        day={day}
+        onChanged={reload}
+        onLog={(kind) => {
+          setEditMeal(null);
+          setSheet(kind);
+        }}
+      />
       <section className="card p-5">
         <h2 className="mb-5 text-sm font-semibold">Today’s nutrition</h2>
         <div className="mb-3 flex items-baseline justify-between">
@@ -106,34 +114,16 @@ export function DayView({
         </div>
       </section>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setEditMeal(null);
-            setSheet("meal");
-          }}
-        >
-          <PlusIcon size={16} /> Meal
-        </button>
-        <button className="btn-ghost" onClick={() => setSheet("workout")}>
-          <DumbbellIcon size={16} /> Workout
-        </button>
-        <button className="btn-ghost" onClick={() => setSheet("metrics")}>
-          <ScaleIcon size={16} /> Body
-        </button>
-        <button className="btn-ghost" onClick={() => setSheet("meditation")}>
-          <LotusIcon size={16} /> Meditate
-        </button>
-        <button className="btn-ghost" onClick={() => setSheet("journal")}>
-          <PenIcon size={16} /> Journal
-        </button>
-      </div>
-
       <section>
-        <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-ink-500">
-          Body
-        </h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Body & wellbeing</h2>
+          <button
+            className="btn-ghost btn-sm min-h-11"
+            onClick={() => setSheet("metrics")}
+          >
+            <ScaleIcon size={16} /> Update metrics
+          </button>
+        </div>
         <div className="card grid grid-cols-3 gap-y-3 p-4 text-sm sm:grid-cols-6">
           <Cell label="Weight" value={weightDisplay(m.weight_kg, unit)} />
           <Cell
@@ -158,7 +148,11 @@ export function DayView({
           />
           <Cell
             label="Water"
-            value={m.water_ml != null ? `${m.water_ml} ml` : "—"}
+            value={
+              m.water_ml != null
+                ? waterDisplay(m.water_ml, user?.water_unit || "gal")
+                : "—"
+            }
             target={g.water_ml}
             raw={m.water_ml}
           />
@@ -303,7 +297,16 @@ export function DayView({
                     {w.kcal ? ` · ${kcal(w.kcal)} kcal` : ""}
                     {w.distance_km ? ` · ${w.distance_km.toFixed(1)} km` : ""}
                     {w.avg_hr ? ` · ${w.avg_hr} bpm` : ""}
-                    {w.source !== "manual" ? ` · ${w.source}` : ""}
+                    {(w.sources || [w.source]).filter(
+                      (source) => source !== "manual",
+                    ).length
+                      ? ` · ${(w.sources || [w.source])
+                          .filter((source) => source !== "manual")
+                          .map((source) =>
+                            source === "strava" ? "Strava" : source,
+                          )
+                          .join(" + ")}`
+                      : ""}
                   </div>
                 </div>
                 <button

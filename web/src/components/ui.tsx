@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { XIcon } from "./Icons";
 
 /** Page title row. */
@@ -6,13 +6,17 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  stackOnMobile,
 }: {
   title: string;
   subtitle?: string;
   action?: ReactNode;
+  stackOnMobile?: boolean;
 }) {
   return (
-    <div className="mb-5 flex items-start justify-between gap-3">
+    <div
+      className={`mb-5 flex items-start justify-between gap-3 ${stackOnMobile ? "flex-col sm:flex-row" : ""}`}
+    >
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink-100">
           {title}
@@ -38,16 +42,58 @@ export function Sheet({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const panel = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const previous = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    panel.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close.current();
+      }
+      if (e.key !== "Tab" || !panel.current) return;
+      const targets = Array.from(
+        panel.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], summary, [tabindex="0"]',
+        ),
+      ).filter(
+        (node) =>
+          !node.closest("details:not([open])") || node.tagName === "SUMMARY",
+      );
+      const first = targets[0],
+        last = targets[targets.length - 1];
+      if (!first) {
+        e.preventDefault();
+        return;
+      }
+      if (
+        e.shiftKey &&
+        (document.activeElement === first ||
+          document.activeElement === panel.current)
+      ) {
+        e.preventDefault();
+        last.focus();
+      } else if (
+        !e.shiftKey &&
+        (document.activeElement === last ||
+          document.activeElement === panel.current)
+      ) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      if (previous?.isConnected) previous.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return (
     <div
@@ -56,14 +102,21 @@ export function Sheet({
     >
       <div
         role="dialog"
+        aria-modal="true"
         aria-label={title}
-        className={`max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-ink-800 bg-ink-900 p-5 animate-slide-up md:rounded-2xl ${wide ? "md:max-w-2xl" : "md:max-w-md"}`}
+        ref={panel}
+        tabIndex={-1}
+        className={`max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl border border-ink-800 bg-ink-900 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] outline-none animate-slide-up md:rounded-2xl ${wide ? "md:max-w-2xl" : "md:max-w-md"}`}
         onClick={(e) => e.stopPropagation()}
       >
+        <div
+          className="mx-auto -mt-2 mb-4 h-1 w-9 rounded-full bg-ink-700 md:hidden"
+          aria-hidden="true"
+        />
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ink-100">{title}</h2>
           <button
-            className="rounded-lg p-1.5 text-ink-500 hover:bg-ink-800 hover:text-ink-200"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-1.5 text-ink-500 hover:bg-ink-800 hover:text-ink-200"
             onClick={onClose}
             aria-label="Close"
           >

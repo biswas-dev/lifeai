@@ -220,6 +220,7 @@ class ApiClient {
     name?: string;
     timezone?: string;
     weight_unit?: "kg" | "lb";
+    water_unit?: "gal" | "oz" | "ml" | "l";
     dob?: string;
     sex?: string;
     height_cm?: number;
@@ -262,6 +263,17 @@ class ApiClient {
     return this.request<Day>(`/api/days/${date}`, {
       method: "PATCH",
       body: JSON.stringify(body),
+    });
+  }
+  addWater(date: string, amount: number, unit: string, request_id: string) {
+    return this.request<Day>(`/api/days/${date}/water`, {
+      method: "POST",
+      body: JSON.stringify({ amount, unit, request_id }),
+    });
+  }
+  deleteWater(date: string, id: number) {
+    return this.request<Day>(`/api/days/${date}/water/${id}`, {
+      method: "DELETE",
     });
   }
   stats(days = 90) {

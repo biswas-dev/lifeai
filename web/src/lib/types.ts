@@ -1,3 +1,10 @@
+export type WaterUnit = "gal" | "oz" | "ml" | "l";
+export interface WaterEntry {
+  id: number;
+  amount_ml: number;
+  created_at: string;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -7,6 +14,7 @@ export interface User {
   is_admin: boolean;
   auth_provider: string;
   weight_unit: "kg" | "lb";
+  water_unit?: WaterUnit;
   created_at: string;
   dob: string;
   sex: string;
@@ -132,6 +140,7 @@ export interface Workout {
   notes: string;
   started_at: string | null;
   source: string;
+  sources?: string[];
 }
 
 export interface Meditation {
@@ -173,6 +182,7 @@ export interface Photo {
 }
 
 export interface Day {
+  water?: WaterEntry[];
   date: string;
   is_today: boolean;
   metrics: Metrics;
@@ -186,6 +196,7 @@ export interface Day {
 }
 
 export interface DaySummary {
+  water_ml?: number | null;
   date: string;
   kcal: number;
   protein_g: number;

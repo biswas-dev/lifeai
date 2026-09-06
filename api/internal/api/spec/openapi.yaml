@@ -74,12 +74,19 @@ components:
         activity: { type: string }
         minutes: { type: integer }
         kcal: { type: number, nullable: true }
+    WaterEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        amount_ml: { type: number }
+        created_at: { type: string }
     Day:
       type: object
       properties:
         date: { type: string, format: date }
         is_today: { type: boolean }
         metrics: { $ref: '#/components/schemas/Metrics' }
+        water: { type: array, items: { $ref: '#/components/schemas/WaterEntry' } }
         meals: { type: array, items: { $ref: '#/components/schemas/Meal' } }
         workouts: { type: array, items: { $ref: '#/components/schemas/Workout' } }
         totals:
@@ -133,7 +140,7 @@ paths:
       responses:
         '200': { description: OK }
     patch:
-      summary: Update name, timezone or weight unit
+      summary: Update name, timezone, weight unit or water unit
       responses:
         '200': { description: OK }
   /goals:
@@ -145,6 +152,36 @@ paths:
       summary: Replace targets
       responses:
         '200': { description: OK }
+  /days/{date}/water:
+    parameters:
+      - { name: date, in: path, required: true, schema: { type: string, format: date } }
+    post:
+      summary: Add a drink to the daily total
+      description: Reuse the request_id when retrying the same drink, including after an undo. Gallons and fluid ounces use US units.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, unit, request_id]
+              properties:
+                amount: { type: number, exclusiveMinimum: 0 }
+                unit: { type: string, enum: [gal, oz, l, ml] }
+                request_id: { type: string, minLength: 8, maxLength: 100 }
+      responses:
+        '200': { description: Updated day, content: { application/json: { schema: { $ref: '#/components/schemas/Day' } } } }
+        '400': { description: Invalid amount or unit }
+        '409': { description: Request ID already used for a different drink }
+  /days/{date}/water/{waterID}:
+    parameters:
+      - { name: date, in: path, required: true, schema: { type: string, format: date } }
+      - { name: waterID, in: path, required: true, schema: { type: integer } }
+    delete:
+      summary: Undo a drink and recalculate the daily total
+      responses:
+        '200': { description: Updated day, content: { application/json: { schema: { $ref: '#/components/schemas/Day' } } } }
+        '404': { description: Drink not found }
   /today:
     get:
       summary: Today in the caller's timezone

@@ -239,7 +239,7 @@ func (s *Server) stats(ctx context.Context, userID int64, days int) (Stats, erro
 		`SELECT on_date FROM meditations WHERE user_id = ? AND on_date BETWEEN ? AND ?`,
 		`SELECT on_date FROM photos WHERE user_id = ? AND on_date BETWEEN ? AND ?`,
 		`SELECT on_date FROM journal_entries WHERE user_id = ? AND on_date BETWEEN ? AND ?`,
-		`SELECT on_date FROM days WHERE user_id = ? AND on_date BETWEEN ? AND ? AND (weight_kg IS NOT NULL OR steps IS NOT NULL OR sleep_hours IS NOT NULL OR resting_hr IS NOT NULL OR note <> '')`,
+		`SELECT on_date FROM days WHERE user_id = ? AND on_date BETWEEN ? AND ? AND (weight_kg IS NOT NULL OR steps IS NOT NULL OR sleep_hours IS NOT NULL OR resting_hr IS NOT NULL OR water_ml > 0 OR note <> '')`,
 	} {
 		rows, err := s.db.QueryContext(ctx, q, userID, from, to)
 		if err != nil {

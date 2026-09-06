@@ -452,7 +452,7 @@ func (h *Hard75Syncer) importDay(ctx context.Context, userID int64, d *hard75.Da
 	}
 
 	for _, w := range d.Workouts {
-		started, _ := time.Parse(time.RFC3339, w.StartedAt)
+		started, _ := parseDBTime(w.StartedAt)
 		_, err := s.importWorkout(ctx, userID, health.WorkoutImport{
 			Source: "75hard", ExternalID: "workout:" + strconv.FormatInt(w.ID, 10),
 			Date: d.Date, Kind: MapWorkoutKind(w.Kind, w.Activity), Activity: w.Activity,
@@ -535,6 +535,8 @@ func (h *Hard75Syncer) importCheckIn(ctx context.Context, userID int64, d *hard7
 				factor = 29.5735295625 // US fluid ounces, as used by 75hard.
 			case "ml":
 				factor = 1
+			case "gal", "gallon", "gallons":
+				factor = 3785.411784
 			case "l", "liters", "litres":
 				factor = 1000
 			}

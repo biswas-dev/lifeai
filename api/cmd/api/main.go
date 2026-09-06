@@ -250,6 +250,8 @@ func main() {
 			r.Get("/days", server.HandleListDays)
 			r.Get("/days/{date}", server.HandleGetDay)
 			r.Patch("/days/{date}", server.HandleUpdateDay)
+			r.Post("/days/{date}/water", server.HandleAddWater)
+			r.Delete("/days/{date}/water/{waterID}", server.HandleDeleteWater)
 
 			r.Get("/photos", server.HandleListPhotos)
 			r.Post("/photos", server.HandleUploadPhoto)

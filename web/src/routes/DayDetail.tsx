@@ -39,6 +39,7 @@ export function DayDetail() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         title={relativeDay(date)}
+        stackOnMobile
         subtitle={prettyDate(date, true)}
         action={
           <div className="flex items-center gap-1">

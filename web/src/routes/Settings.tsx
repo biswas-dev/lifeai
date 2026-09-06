@@ -1,3 +1,4 @@
+import { waterConfig } from "../lib/water";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
@@ -152,6 +153,8 @@ function ProfileSettings() {
   );
 }
 function GoalSettings() {
+  const { user } = useAuth();
+  const waterUnit = waterConfig(user?.water_unit || "gal");
   const result = useResource(() => api.goals());
   const [goals, setGoals] = useState<Goals | null>(null);
   const a = useAction();
@@ -186,22 +189,38 @@ function GoalSettings() {
         >
           <div className="grid grid-cols-2 gap-3">
             {fields.map(([key, label]) => (
-              <Field key={key} label={label}>
+              <Field
+                key={key}
+                label={
+                  key === "water_ml" ? `Water (${waterUnit.short})` : label
+                }
+              >
                 <input
                   type="number"
                   className="field"
                   min="0"
                   step={
-                    key === "sleep_hours" || key === "target_weight_kg"
-                      ? "0.1"
-                      : "1"
+                    key === "water_ml"
+                      ? "any"
+                      : key === "sleep_hours" || key === "target_weight_kg"
+                        ? "0.1"
+                        : "1"
                   }
-                  value={goals[key] ?? ""}
+                  value={
+                    key === "water_ml" && goals.water_ml != null
+                      ? Math.round((goals.water_ml / waterUnit.ml) * 1000) /
+                        1000
+                      : (goals[key] ?? "")
+                  }
                   onChange={(e) =>
                     setGoals({
                       ...goals,
                       [key]:
-                        e.target.value === "" ? null : Number(e.target.value),
+                        e.target.value === ""
+                          ? null
+                          : key === "water_ml"
+                            ? Math.round(Number(e.target.value) * waterUnit.ml)
+                            : Number(e.target.value),
                     })
                   }
                 />

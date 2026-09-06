@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { Dashboard, Day } from "../lib/types";
-import { prettyDate, weekday, weightDisplay } from "../lib/format";
+import { prettyDate, weekday } from "../lib/format";
 import { useAuth } from "../state/AuthContext";
 import { useResource } from "../lib/useResource";
 import { DayView } from "../components/DayView";
@@ -15,13 +15,17 @@ export function Today() {
   const [dash, setDash] = useState<Dashboard | null>(null);
   const [error, setError] = useState("");
   const summary = useResource(() => api.healthSummary());
+  const loadVersion = useRef(0);
   const load = useCallback(async (d?: Day) => {
+    const version = ++loadVersion.current;
+    if (d) setDash((current) => (current ? { ...current, today: d } : current));
     try {
       const next = await api.dashboard();
-      if (d) next.today = d;
+      if (version !== loadVersion.current) return;
       setDash(next);
       setError("");
     } catch (e) {
+      if (version !== loadVersion.current) return;
       setError(e instanceof Error ? e.message : "Could not load your day");
     }
   }, []);
@@ -60,15 +64,17 @@ export function Today() {
     ) || [];
   return (
     <div>
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 md:mb-7 md:gap-4">
         <div>
-          <p className="eyebrow mb-3">Make a little room for you</p>
-          <h1 className="text-3xl font-semibold tracking-[-0.045em] text-ink-100 md:text-4xl">
+          <p className="eyebrow mb-3 hidden md:block">
+            Make a little room for you
+          </p>
+          <h1 className="text-2xl font-semibold tracking-[-0.045em] text-ink-100 md:text-4xl">
             {greeting}
             {first ? `, ${first}` : ""}.
           </h1>
-          <p className="mt-2 text-sm text-ink-400">
-            A view of your day. A little context for what comes next.
+          <p className="mt-1 text-xs text-ink-400 md:mt-2 md:text-sm">
+            Make a note of what you do, whenever you do it.
           </p>
         </div>
         <Link to="/app/history" className="btn-ghost bg-white text-xs">
@@ -76,48 +82,10 @@ export function Today() {
         </Link>
       </div>
       <ErrorText>{error || summary.error}</ErrorText>
-      <div className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          [
-            "Your consistency",
-            `${st.streak}`,
-            "consecutive days logged",
-            st.weight,
-          ],
-          [
-            "Daily intake",
-            st.avg_kcal ? Math.round(st.avg_kcal).toLocaleString() : "—",
-            "avg kcal · recorded days / 30d",
-            st.kcal,
-          ],
-          [
-            "Time for movement",
-            `${st.workout_minutes}`,
-            "training minutes · last 30 days",
-            st.training,
-          ],
-          [
-            "Latest weight",
-            weightDisplay(st.weight_trend.latest, user?.weight_unit || "kg"),
-            `${st.weight_trend.count} readings · last 30 days`,
-            st.weight,
-          ],
-        ].map(([label, value, sub], i) => (
-          <div key={String(label)} className="card p-5">
-            <p className="text-xs text-ink-400">{String(label)}</p>
-            <p
-              className={`mt-3 text-3xl font-semibold tracking-tight ${i === 0 ? "text-vital-500" : "text-ink-100"}`}
-            >
-              {String(value)}
-            </p>
-            <p className="mt-2 text-[10px] text-ink-500">{String(sub)}</p>
-          </div>
-        ))}
-      </div>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Your daily journal</h2>
+          <div className="mb-3 flex items-center justify-between md:mb-4">
+            <h2 className="text-sm font-semibold">Your week</h2>
             <span className="text-[11px] text-ink-500">This week</span>
           </div>
           <div className="mb-5 flex gap-2">
@@ -127,20 +95,22 @@ export function Today() {
                 d.workout_minutes > 0 ||
                 d.weight_kg != null ||
                 d.journal > 0 ||
-                d.photos > 0;
+                d.photos > 0 ||
+                (d.water_ml || 0) > 0 ||
+                d.meditation_minutes > 0;
               return (
                 <Link
                   key={d.date}
                   to={`/app/day/${d.date}`}
                   aria-label={prettyDate(d.date)}
-                  className={`flex flex-1 flex-col items-center rounded-xl border py-3 text-[10px] ${d.date === dash.today.date ? "border-vital-500 bg-vital-500 text-white" : "border-ink-800 bg-white text-ink-500"}`}
+                  className={`flex flex-1 flex-col items-center rounded-xl border py-2 text-[10px] md:py-3 ${d.date === dash.today.date ? "border-vital-500 bg-vital-500 text-white" : "border-ink-800 bg-white text-ink-500"}`}
                 >
                   <span>{weekday(d.date)}</span>
-                  <span className="mt-1.5 text-base font-medium">
+                  <span className="mt-1 text-base font-medium md:mt-1.5">
                     {Number(d.date.slice(-2))}
                   </span>
                   <span
-                    className={`mt-2 h-1 w-1 rounded-full ${logged ? (d.date === dash.today.date ? "bg-white" : "bg-vital-500") : "bg-transparent"}`}
+                    className={`mt-1 h-1 w-1 rounded-full md:mt-2 ${logged ? (d.date === dash.today.date ? "bg-white" : "bg-vital-500") : "bg-transparent"}`}
                   />
                 </Link>
               );

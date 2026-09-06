@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ type Workout struct {
 	Notes      string   `json:"notes"`
 	StartedAt  *string  `json:"started_at"`
 	Source     string   `json:"source"`
+	Sources    []string `json:"sources"`
 }
 
 // WorkoutKinds are the shapes a session can take.
@@ -116,7 +118,7 @@ func (s *Server) HandleDeleteWorkout(w http.ResponseWriter, r *http.Request) {
 	s.deleteOwned(w, r, "workouts", chi.URLParam(r, "workoutID"))
 }
 
-const workoutColumns = `id, on_date, kind, activity, minutes, kcal, distance_km, avg_hr, notes, started_at, source`
+const workoutColumns = `id, on_date, kind, activity, minutes, kcal, distance_km, avg_hr, notes, started_at, source, COALESCE((SELECT json_group_array(source) FROM (SELECT DISTINCT source FROM workout_sources WHERE workout_id=workouts.id ORDER BY source)),'[]')`
 
 func (s *Server) workoutByID(ctx context.Context, userID, id int64) (Workout, error) {
 	return scanWorkout(s.db.QueryRowContext(ctx, `SELECT `+workoutColumns+` FROM workouts WHERE id = ? AND user_id = ?`, id, userID))
@@ -145,8 +147,13 @@ func scanWorkout(row scanner) (Workout, error) {
 		kcal, dist sql.NullFloat64
 		hr         sql.NullInt64
 		started    sql.NullString
+		sources    string
 	)
-	err := row.Scan(&wk.ID, &wk.Date, &wk.Kind, &wk.Activity, &wk.Minutes, &kcal, &dist, &hr, &wk.Notes, &started, &wk.Source)
+	err := row.Scan(&wk.ID, &wk.Date, &wk.Kind, &wk.Activity, &wk.Minutes, &kcal, &dist, &hr, &wk.Notes, &started, &wk.Source, &sources)
+	_ = json.Unmarshal([]byte(sources), &wk.Sources)
+	if len(wk.Sources) == 0 {
+		wk.Sources = []string{wk.Source}
+	}
 	wk.Kcal, wk.DistanceKm, wk.AvgHR, wk.StartedAt = floatPtr(kcal), floatPtr(dist), intPtr(hr), strPtr(started)
 	return wk, err
 }

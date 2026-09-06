@@ -23,6 +23,7 @@ type User struct {
 	IsAdmin      bool   `json:"is_admin"`
 	AuthProvider string `json:"auth_provider"`
 	WeightUnit   string `json:"weight_unit"`
+	WaterUnit    string `json:"water_unit"`
 	// DOB is YYYY-MM-DD; Sex is male, female, other or empty; HeightCm is
 	// what BMI and the coach use.
 	DOB       string   `json:"dob"`
@@ -155,6 +156,7 @@ type updateProfileRequest struct {
 	Name       *string  `json:"name"`
 	Timezone   *string  `json:"timezone"`
 	WeightUnit *string  `json:"weight_unit"`
+	WaterUnit  *string  `json:"water_unit"`
 	DOB        *string  `json:"dob"`
 	Sex        *string  `json:"sex"`
 	HeightCm   *float64 `json:"height_cm"`
@@ -197,6 +199,17 @@ func (s *Server) HandleUpdateProfile(w http.ResponseWriter, r *http.Request) {
 		if _, err := s.db.ExecContext(ctx,
 			`UPDATE users SET weight_unit = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, unit, userID); err != nil {
 			respondError(w, http.StatusInternalServerError, "could not update profile", "internal")
+			return
+		}
+	}
+	if req.WaterUnit != nil {
+		unit := strings.ToLower(strings.TrimSpace(*req.WaterUnit))
+		if waterFactor(unit) == 0 {
+			respondError(w, 400, "water unit must be gal, oz, ml or l", "invalid_unit")
+			return
+		}
+		if _, err := s.db.ExecContext(ctx, `UPDATE users SET water_unit=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`, unit, userID); err != nil {
+			respondError(w, 500, "could not update profile", "internal")
 			return
 		}
 	}
@@ -289,10 +302,10 @@ func (s *Server) getUser(ctx context.Context, id int64) (User, error) {
 	var u User
 	var height sql.NullFloat64
 	err := s.db.QueryRowContext(ctx,
-		`SELECT id, email, name, avatar_url, timezone, is_admin, auth_provider, weight_unit, dob, sex, height_cm, created_at
+		`SELECT id, email, name, avatar_url, timezone, is_admin, auth_provider, weight_unit, water_unit, dob, sex, height_cm, created_at
 		 FROM users WHERE id = ? AND deleted_at IS NULL`, id).
 		Scan(&u.ID, &u.Email, &u.Name, &u.AvatarURL, &u.Timezone, &u.IsAdmin, &u.AuthProvider,
-			&u.WeightUnit, &u.DOB, &u.Sex, &height, &u.CreatedAt)
+			&u.WeightUnit, &u.WaterUnit, &u.DOB, &u.Sex, &height, &u.CreatedAt)
 	u.HeightCm = floatPtr(height)
 	if err == nil {
 		u.Hard75Eligible = s.cfg.Hard75Allowed(u.Email)

@@ -8,6 +8,8 @@ import type {
   Photo,
   Slot,
 } from "../lib/types";
+import { useAuth } from "../state/AuthContext";
+import { waterConfig } from "../lib/water";
 import { toKg, fromKg } from "../lib/format";
 import { ErrorText, Field, NumberInput, Sheet } from "./ui";
 import { PhotoUpload } from "./PhotoUpload";
@@ -242,6 +244,8 @@ export function MetricsSheet({
   unit: "kg" | "lb";
   onSaved: (d: Day) => void;
 }) {
+  const { user } = useAuth();
+  const waterUnit = waterConfig(user?.water_unit || "gal");
   const [weight, setWeight] = useState<number | "">("");
   const [fat, setFat] = useState<number | "">("");
   const [hr, setHr] = useState<number | "">("");
@@ -265,12 +269,16 @@ export function MetricsSheet({
     setHr(metrics.resting_hr ?? "");
     setSleep(metrics.sleep_hours ?? "");
     setSteps(metrics.steps ?? "");
-    setWater(metrics.water_ml ?? "");
+    setWater(
+      metrics.water_ml == null
+        ? ""
+        : Math.round((metrics.water_ml / waterUnit.ml) * 1000) / 1000,
+    );
     setMood(metrics.mood ?? "");
     setEnergy(metrics.energy ?? "");
     setNote(metrics.note || "");
     setError("");
-  }, [open, metrics, unit]);
+  }, [open, metrics, unit, waterUnit.ml]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -289,7 +297,7 @@ export function MetricsSheet({
       put("resting_hr", hr);
       put("sleep_hours", sleep);
       put("steps", steps);
-      put("water_ml", water);
+      put("water_ml", water === "" ? "" : Math.round(water * waterUnit.ml));
       put("mood", mood);
       put("energy", energy);
       if (clear.length) body.clear = clear;
@@ -322,8 +330,8 @@ export function MetricsSheet({
           <Field label="Steps">
             <NumberInput value={steps} onChange={setSteps} step="1" />
           </Field>
-          <Field label="Water (ml)">
-            <NumberInput value={water} onChange={setWater} step="50" />
+          <Field label={`Water total (${waterUnit.short})`}>
+            <NumberInput value={water} onChange={setWater} step="any" />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -401,13 +409,14 @@ export function WorkoutSheet({
   date: string;
   onSaved: () => void;
 }) {
-  const [kind, setKind] = useState("strength");
+  const [kind, setKind] = useState("walk");
   const [activity, setActivity] = useState("");
-  const [minutes, setMinutes] = useState<number | "">(45);
+  const [minutes, setMinutes] = useState<number | "">(20);
   const [kcal, setKcal] = useState<number | "">("");
   const [distance, setDistance] = useState<number | "">("");
   const [hr, setHr] = useState<number | "">("");
   const [notes, setNotes] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -425,7 +434,16 @@ export function WorkoutSheet({
         distance_km: distance === "" ? null : distance,
         avg_hr: hr === "" ? null : hr,
         notes,
+        started_at: startTime
+          ? new Date(`${date}T${startTime}`).toISOString()
+          : null,
       });
+      setActivity("");
+      setNotes("");
+      setKcal("");
+      setDistance("");
+      setHr("");
+      setStartTime("");
       onSaved();
       onClose();
     } catch (err) {
@@ -436,7 +454,7 @@ export function WorkoutSheet({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Log a workout">
+    <Sheet open={open} onClose={onClose} title="Log exercise">
       <form onSubmit={save} className="space-y-4">
         <div>
           <span className="label">Kind</span>
@@ -453,7 +471,7 @@ export function WorkoutSheet({
             ))}
           </div>
         </div>
-        <Field label="Activity">
+        <Field label="Activity (optional)">
           <input
             className="field"
             value={activity}
@@ -461,30 +479,63 @@ export function WorkoutSheet({
             placeholder="Push day, 5k tempo, evening walk…"
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Minutes">
-            <NumberInput value={minutes} onChange={setMinutes} step="1" />
-          </Field>
-          <Field label="kcal">
-            <NumberInput value={kcal} onChange={setKcal} step="1" />
-          </Field>
-          <Field label="Distance (km)">
-            <NumberInput value={distance} onChange={setDistance} step="0.1" />
-          </Field>
-          <Field label="Avg HR">
-            <NumberInput value={hr} onChange={setHr} step="1" />
-          </Field>
+        <div className="grid grid-cols-4 gap-2">
+          {[10, 20, 30, 60].map((value) => (
+            <button
+              type="button"
+              key={value}
+              className={`btn-ghost px-2 ${minutes === value ? "chip-active" : ""}`}
+              aria-pressed={minutes === value}
+              onClick={() => setMinutes(value)}
+            >
+              {value} min
+            </button>
+          ))}
         </div>
-        <Field label="Notes">
-          <input
-            className="field"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+        <Field label="Minutes">
+          <NumberInput value={minutes} onChange={setMinutes} step="1" />
         </Field>
+        <details className="rounded-xl border border-ink-800 p-3">
+          <summary className="min-h-8 cursor-pointer text-sm text-ink-500">
+            More details (optional)
+          </summary>
+          <div className="mt-3 space-y-3">
+            <Field label="Started at (local time)">
+              <input
+                type="time"
+                className="field"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Calories">
+                <NumberInput value={kcal} onChange={setKcal} step="1" />
+              </Field>
+              <Field label="Distance (km)">
+                <NumberInput
+                  value={distance}
+                  onChange={setDistance}
+                  step="0.1"
+                />
+              </Field>
+              <Field label="Average heart rate">
+                <NumberInput value={hr} onChange={setHr} step="1" />
+              </Field>
+            </div>
+            <Field label="Notes">
+              <textarea
+                rows={2}
+                className="field"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </Field>
+          </div>
+        </details>
         <ErrorText>{error}</ErrorText>
         <button className="btn-primary w-full" disabled={busy || !minutes}>
-          {busy ? "Saving…" : "Log workout"}
+          {busy ? "Saving…" : "Save exercise"}
         </button>
       </form>
     </Sheet>
@@ -520,8 +571,10 @@ export function MeditationSheet({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    setError("");
     try {
       await api.createMeditation({ date, minutes: minutes || 0, style, notes });
+      setNotes("");
       onSaved();
       onClose();
     } catch (err) {
@@ -531,8 +584,21 @@ export function MeditationSheet({
     }
   }
   return (
-    <Sheet open={open} onClose={onClose} title="Log a sitting">
+    <Sheet open={open} onClose={onClose} title="Log meditation">
       <form onSubmit={save} className="space-y-4">
+        <div className="grid grid-cols-4 gap-2">
+          {[5, 10, 15, 20].map((value) => (
+            <button
+              type="button"
+              key={value}
+              className={`btn-ghost px-2 ${minutes === value ? "chip-active" : ""}`}
+              aria-pressed={minutes === value}
+              onClick={() => setMinutes(value)}
+            >
+              {value} min
+            </button>
+          ))}
+        </div>
         <Field label="Minutes">
           <NumberInput value={minutes} onChange={setMinutes} step="1" />
         </Field>
@@ -560,7 +626,7 @@ export function MeditationSheet({
         </Field>
         <ErrorText>{error}</ErrorText>
         <button className="btn-primary w-full" disabled={busy || !minutes}>
-          {busy ? "Saving…" : "Log"}
+          {busy ? "Saving…" : "Save meditation"}
         </button>
       </form>
     </Sheet>

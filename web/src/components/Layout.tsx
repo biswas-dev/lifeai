@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Sheet } from "./ui";
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../state/AuthContext";
 import {
@@ -14,8 +16,8 @@ import {
 } from "./Icons";
 
 const tabs = [
-  { to: "/app", label: "Overview", icon: HomeIcon, end: true },
-  { to: "/app/history", label: "History", icon: CalendarIcon },
+  { to: "/app", label: "Today", icon: HomeIcon, end: true },
+  { to: "/app/history", label: "Calendar", icon: CalendarIcon },
   { to: "/app/recipes", label: "Recipes", icon: BookIcon },
   { to: "/app/trends", label: "Trends", icon: ChartIcon },
   { to: "/app/blood", label: "Blood work", icon: DropIcon },
@@ -24,9 +26,15 @@ const tabs = [
   { to: "/app/coach", label: "Health insights", icon: SparkIcon },
   { to: "/app/settings", label: "Settings", icon: UserIcon },
 ];
-const phoneTabs = [tabs[0], tabs[2], tabs[4], tabs[3], tabs[8]];
+const phoneTabs = [
+  tabs[0],
+  tabs[1],
+  { ...tabs[5], label: "Photos" },
+  { ...tabs[7], label: "Insights" },
+];
 export function Layout() {
   const { user, logout } = useAuth();
+  const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const current =
     tabs.find((t) => t.to === location.pathname)?.label || "Your record";
@@ -84,7 +92,7 @@ export function Layout() {
         </div>
       </aside>
       <div className="min-w-0 flex-1">
-        <header className="flex h-16 items-center justify-between border-b border-ink-800 bg-white px-5 md:px-9">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-ink-800 bg-white/95 px-4 backdrop-blur-lg md:static md:h-16 md:px-9">
           <div className="text-xs text-ink-500">
             <Link to="/app" className="md:hidden font-semibold text-vital-500">
               lifeai. <span className="mx-2">/</span>
@@ -108,7 +116,7 @@ export function Layout() {
         </header>
         <main
           id="main-content"
-          className="mx-auto max-w-[1440px] px-4 pb-28 pt-7 md:px-9 md:pb-12 md:pt-9"
+          className="mx-auto max-w-[1440px] px-4 pb-28 pt-5 md:px-9 md:pb-12 md:pt-9"
         >
           <Outlet />
         </main>
@@ -134,8 +142,50 @@ export function Layout() {
               {t.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label="More navigation"
+            aria-expanded={moreOpen}
+            className={`flex flex-1 flex-col items-center gap-1 py-3 text-[10px] ${!phoneTabs.some((t) => t.to === location.pathname) && !location.pathname.startsWith("/app/day/") ? "font-semibold text-vital-500" : "text-ink-500"}`}
+          >
+            <UserIcon size={19} />
+            More
+          </button>
         </div>
       </nav>
+      <Sheet
+        open={moreOpen}
+        onClose={() => setMoreOpen(false)}
+        title="Your space"
+      >
+        <p className="mb-4 text-sm text-ink-500">{user?.name || "Lifeai"}</p>
+        <nav aria-label="More navigation" className="grid grid-cols-2 gap-2">
+          {tabs
+            .filter((t) => !phoneTabs.some((p) => p.to === t.to))
+            .map((t) => (
+              <Link
+                key={t.to}
+                to={t.to}
+                onClick={() => setMoreOpen(false)}
+                className="flex min-h-16 items-center gap-3 rounded-xl border border-ink-800 p-3 text-sm"
+              >
+                <t.icon size={19} />
+                {t.label}
+              </Link>
+            ))}
+        </nav>
+        <button
+          type="button"
+          className="btn-ghost mt-5 w-full"
+          onClick={() => {
+            setMoreOpen(false);
+            logout();
+          }}
+        >
+          Sign out
+        </button>
+      </Sheet>
     </div>
   );
 }

@@ -43,6 +43,7 @@ type Day struct {
 	Date        string         `json:"date"`
 	IsToday     bool           `json:"is_today"`
 	Metrics     Metrics        `json:"metrics"`
+	Water       []WaterEntry   `json:"water"`
 	Meals       []Meal         `json:"meals"`
 	Workouts    []Workout      `json:"workouts"`
 	Meditations []Meditation   `json:"meditations"`
@@ -55,6 +56,7 @@ type Day struct {
 // DaySummary is one row of the calendar / history list.
 type DaySummary struct {
 	Date              string   `json:"date"`
+	WaterMl           *int     `json:"water_ml"`
 	Kcal              float64  `json:"kcal"`
 	ProteinG          float64  `json:"protein_g"`
 	WeightKg          *float64 `json:"weight_kg"`
@@ -193,6 +195,8 @@ func (s *Server) HandleUpdateDay(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.WaterMl != nil {
 		set("water_ml", *req.WaterMl)
+		sets = append(sets, "water_baseline_ml = ? - (SELECT COALESCE(SUM(amount_ml),0) FROM water_entries WHERE user_id=days.user_id AND on_date=days.on_date AND deleted_at IS NULL)")
+		args = append(args, *req.WaterMl)
 	}
 	if req.Mood != nil {
 		set("mood", *req.Mood)
@@ -212,6 +216,9 @@ func (s *Server) HandleUpdateDay(w http.ResponseWriter, r *http.Request) {
 	for _, c := range req.Clear {
 		if clearable[c] {
 			sets = append(sets, c+" = NULL")
+			if c == "water_ml" {
+				sets = append(sets, "water_baseline_ml = -(SELECT COALESCE(SUM(amount_ml),0) FROM water_entries WHERE user_id=days.user_id AND on_date=days.on_date AND deleted_at IS NULL)")
+			}
 		}
 	}
 	// A hand edit takes the row over from an import, and the fields touched
@@ -315,6 +322,9 @@ func (s *Server) loadDay(ctx context.Context, userID int64, date string) (Day, e
 	if day.Metrics, err = s.loadMetrics(ctx, userID, date); err != nil {
 		return day, err
 	}
+	if day.Water, err = s.waterForDate(ctx, userID, date); err != nil {
+		return day, err
+	}
 	if day.Meals, err = s.mealsForDate(ctx, userID, date); err != nil {
 		return day, err
 	}
@@ -358,22 +368,23 @@ func (s *Server) daySummaries(ctx context.Context, userID int64, from, to string
 		byDate[d] = &DaySummary{Date: d}
 	}
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT on_date, weight_kg, steps, sleep_hours, mood FROM days
+		SELECT on_date, weight_kg, steps, sleep_hours, mood, water_ml FROM days
 		 WHERE user_id = ? AND on_date BETWEEN ? AND ?`, userID, from, to)
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		var (
-			d             string
-			weight, sleep sql.NullFloat64
-			steps, mood   sql.NullInt64
+			d                  string
+			weight, sleep      sql.NullFloat64
+			steps, mood, water sql.NullInt64
 		)
-		if err := rows.Scan(&d, &weight, &steps, &sleep, &mood); err != nil {
+		if err := rows.Scan(&d, &weight, &steps, &sleep, &mood, &water); err != nil {
 			rows.Close()
 			return nil, err
 		}
 		if sum := byDate[d]; sum != nil {
+			sum.WaterMl = intPtr(water)
 			sum.WeightKg, sum.Steps, sum.SleepHours, sum.Mood = floatPtr(weight), intPtr(steps), floatPtr(sleep), intPtr(mood)
 		}
 	}

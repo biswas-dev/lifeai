@@ -61,6 +61,8 @@ func newTestServer(t *testing.T) (*Server, http.Handler) {
 		r.Get("/api/days", s.HandleListDays)
 		r.Get("/api/days/{date}", s.HandleGetDay)
 		r.Patch("/api/days/{date}", s.HandleUpdateDay)
+		r.Post("/api/days/{date}/water", s.HandleAddWater)
+		r.Delete("/api/days/{date}/water/{waterID}", s.HandleDeleteWater)
 		r.Post("/api/meals", s.HandleCreateMeal)
 		r.Patch("/api/meals/{mealID}", s.HandleUpdateMeal)
 		r.Post("/api/recipes", s.HandleCreateRecipe)

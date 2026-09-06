@@ -41,6 +41,10 @@ Passkeys require HTTPS (localhost works for development), use `APP_URL` for the 
 
 Security changes require an interactive session authenticated within five minutes, revoke older browser sessions, and reject API/MCP tokens. Existing personal API tokens continue to work within their scopes. A verified session can manage `/api/security/`; public login ceremonies use `/api/auth/mfa/verify` and `/api/auth/passkeys/login/{begin,finish}`. The operator may run `admin reset-2fa <email>` after independently verifying ownership if the owner has lost both their authenticator and recovery codes. This leaves passkeys and password unchanged and revokes browser sessions.
 
+## Daily logging
+
+Today has a six-tile activity grid for water, exercise, meditation, journal, food and photos. Log any duration or amount when it happens; no challenge completion rules apply. Water supports US gallons (default), US fluid ounces, litres and millilitres, with quick additions, custom amounts and undo. The preferred unit is saved to the profile. Drink request IDs prevent retries from counting twice, and manual water totals take precedence over imported readings. Calendar days include water and meditation activity. Mobile uses fixed bottom navigation, a More menu and bottom-sheet forms.
+
 ## Data connections
 
 - **75hard:** a one-way pull every 24 hours, restricted by `HARD75_ALLOWED_EMAILS`. The default allows only the owner's account. Connect a 75hard read-only token in Settings; imported rows retain source IDs. Historical photos, food, metrics, workouts, meditation and journal entries are imported. Water readings feed the daily metric, while reading, diet and custom task records appear as clearly labelled 75hard check-ins in the journal. Deleting a source-owned entry in lifeai may be undone by the next source sync.
@@ -49,7 +53,7 @@ Security changes require an interactive session authenticated within five minute
 - **Samsung Health:** import its data export ZIP in Settings.
 - **Phone automation:** POST JSON to `/api/import/health` with a read + write API token. Apple/Samsung uploads are file imports, not native mobile HealthKit/Health Connect apps.
 
-Daily readings resolve by source precedence (manual, Apple, Samsung, webhook, Garmin, Strava, 75hard). Manually edited fields win. Workouts with starts within three minutes and comparable durations are treated as the same activity; unmatched or untimed sessions are retained. This is heuristic matching, not an assertion that all vendor exports are lossless. Different lab units stay in separate series.
+Daily readings resolve by source precedence (manual, Apple, Samsung, webhook, Garmin, Strava, 75hard). Manually edited fields win. Workouts match across sources using compatible activity types, starts within three minutes and comparable durations. Explicitly Strava-derived 75hard copies can also match the same name and exact start when elapsed and moving durations differ. Every matched source ID is retained, so later sync corrections update one workout. Direct Strava details take precedence over its 75hard copy. Distinct IDs from one provider, ambiguous matches and untimed sessions stay separate. Matching is heuristic because 75hard does not expose the original Strava activity ID. Different lab units stay in separate series.
 
 ## Blood reports and analysis
 
