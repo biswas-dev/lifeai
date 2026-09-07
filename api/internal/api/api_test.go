@@ -56,6 +56,7 @@ func newTestServer(t *testing.T) (*Server, http.Handler) {
 	r.Group(func(r chi.Router) {
 		r.Use(s.JWTAuth)
 		r.Get("/api/me", s.HandleMe)
+		r.Get("/api/goals", s.HandleGetGoals)
 		r.Put("/api/goals", s.HandleSaveGoals)
 		r.Get("/api/today", s.HandleGetToday)
 		r.Get("/api/days", s.HandleListDays)
@@ -198,6 +199,22 @@ func TestDayTotalsAndMetrics(t *testing.T) {
 	}
 	if list[2]["date"] != "2026-09-01" || list[2]["kcal"].(float64) != 300 || list[2]["workout_minutes"].(float64) != 40 {
 		t.Fatalf("summary wrong: %v", list[2])
+	}
+}
+
+func TestGoalsRoundTripActivityTargetsAndQuickAdds(t *testing.T) {
+	_, h := newTestServer(t)
+	c := signup(t, h, "goals@example.com")
+	code, saved := c.do("PUT", "/api/goals", map[string]any{
+		"water_ml": 3000, "workout_minutes": 45, "meditation_minutes": 15,
+		"quick_water_ml": 500, "quick_workout_minutes": 30, "quick_meditation_minutes": 5,
+	})
+	if code != 200 || saved["meditation_minutes"] != float64(15) || saved["quick_workout_minutes"] != float64(30) {
+		t.Fatalf("activity goals were not saved: %d %v", code, saved)
+	}
+	code, got := c.do("GET", "/api/goals", nil)
+	if code != 200 || got["quick_water_ml"] != float64(500) || got["quick_meditation_minutes"] != float64(5) {
+		t.Fatalf("activity goals were not returned: %d %v", code, got)
 	}
 }
 

@@ -171,6 +171,7 @@ function GoalSettings() {
     ["water_ml", "Water (ml)"],
     ["sleep_hours", "Sleep (hours)"],
     ["workout_minutes", "Training (minutes)"],
+    ["meditation_minutes", "Meditation (minutes)"],
   ] as const;
   return (
     <Section title="Your daily goals">
@@ -226,6 +227,28 @@ function GoalSettings() {
                 />
               </Field>
             ))}
+          </div>
+          <div className="border-t border-ink-800 pt-4">
+            <h3 className="text-sm font-medium text-ink-200">Quick-add amounts</h3>
+            <p className="mt-1 text-xs text-ink-500">Choose how much each + button logs.</p>
+            <div className="mt-3 grid grid-cols-3 gap-3">
+              <Field label={`Water (${waterUnit.short})`}>
+                <input
+                  type="number"
+                  className="field"
+                  min="0.001"
+                  step="any"
+                  value={goals.quick_water_ml != null ? Math.round((goals.quick_water_ml / waterUnit.ml) * 1000) / 1000 : ""}
+                  onChange={(e) => setGoals({ ...goals, quick_water_ml: e.target.value === "" ? null : Math.round(Number(e.target.value) * waterUnit.ml) })}
+                />
+              </Field>
+              <Field label="Exercise (min)">
+                <input type="number" className="field" min="1" step="1" value={goals.quick_workout_minutes ?? ""} onChange={(e) => setGoals({ ...goals, quick_workout_minutes: e.target.value === "" ? null : Number(e.target.value) })} />
+              </Field>
+              <Field label="Meditation (min)">
+                <input type="number" className="field" min="1" step="1" value={goals.quick_meditation_minutes ?? ""} onChange={(e) => setGoals({ ...goals, quick_meditation_minutes: e.target.value === "" ? null : Number(e.target.value) })} />
+              </Field>
+            </div>
           </div>
           <Field label="Plan & preferences">
             <textarea

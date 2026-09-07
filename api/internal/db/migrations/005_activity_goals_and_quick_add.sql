@@ -1,0 +1,4 @@
+ALTER TABLE goals ADD COLUMN meditation_minutes INTEGER;
+ALTER TABLE goals ADD COLUMN quick_water_ml INTEGER NOT NULL DEFAULT 946;
+ALTER TABLE goals ADD COLUMN quick_workout_minutes INTEGER NOT NULL DEFAULT 20;
+ALTER TABLE goals ADD COLUMN quick_meditation_minutes INTEGER NOT NULL DEFAULT 10;

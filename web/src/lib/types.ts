@@ -67,6 +67,10 @@ export interface Goals {
   water_ml: number | null;
   sleep_hours: number | null;
   workout_minutes: number | null;
+  meditation_minutes: number | null;
+  quick_water_ml: number | null;
+  quick_workout_minutes: number | null;
+  quick_meditation_minutes: number | null;
   notes: string;
 }
 

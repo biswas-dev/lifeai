@@ -155,6 +155,45 @@ test("exercise and meditation accept short sessions without challenge-duration r
   );
 });
 
+test("exercise and meditation tiles use configured quick-add amounts", async () => {
+  vi.mocked(api.createWorkout).mockResolvedValue({} as never);
+  vi.mocked(api.createMeditation).mockResolvedValue({} as never);
+  const day = {
+    ...emptyDay,
+    goals: {
+      ...emptyDay.goals,
+      quick_workout_minutes: 25,
+      quick_meditation_minutes: 7,
+    },
+  } as Day;
+  const changed = vi.fn();
+  render(<ActivityGrid day={day} onLog={() => {}} onChanged={changed} />);
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add 25 min of exercise" }),
+  );
+  await waitFor(() =>
+    expect(api.createWorkout).toHaveBeenCalledWith({
+      date: day.date,
+      kind: "other",
+      activity: "Quick add",
+      minutes: 25,
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Add 7 min of meditation" }),
+  );
+  await waitFor(() =>
+    expect(api.createMeditation).toHaveBeenCalledWith({
+      date: day.date,
+      minutes: 7,
+      style: "other",
+      notes: "Quick add",
+    }),
+  );
+  expect(changed).toHaveBeenCalledTimes(2);
+});
+
 test("the mobile More menu makes every secondary page accessible", () => {
   render(
     <MemoryRouter initialEntries={["/app"]}>

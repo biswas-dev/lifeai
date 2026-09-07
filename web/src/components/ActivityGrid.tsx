@@ -52,6 +52,12 @@ export function ActivityGrid({
   }, [day.date]);
   const water = day.metrics.water_ml || 0;
   const config = waterConfig(unit);
+  const quickWater = day.goals.quick_water_ml
+    ? Math.round((day.goals.quick_water_ml / config.ml) * 1000) / 1000
+    : config.quick[1];
+  const quickWorkout = day.goals.quick_workout_minutes || 20;
+  const quickMeditation = day.goals.quick_meditation_minutes || 10;
+  const [quickBusy, setQuickBusy] = useState<"workout" | "meditation" | null>(null);
 
   async function add(amount: number) {
     const intent = `${day.date}:${amount}:${unit}`;
@@ -93,10 +99,36 @@ export function ActivityGrid({
       setBusy(false);
     }
   }
+  async function quickAdd(kind: "workout" | "meditation", minutes: number) {
+    setQuickBusy(kind);
+    setError("");
+    setNotice("");
+    try {
+      if (kind === "workout") {
+        await api.createWorkout({ date: day.date, kind: "other", activity: "Quick add", minutes });
+      } else {
+        await api.createMeditation({ date: day.date, minutes, style: "other", notes: "Quick add" });
+      }
+      setNotice(`${minutes} minutes of ${kind === "workout" ? "exercise" : "meditation"} added.`);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Could not log ${kind}.`);
+    } finally {
+      setQuickBusy(null);
+    }
+  }
   async function chooseUnit(next: WaterUnit) {
     setBusy(true);
     setUnit(next);
-    setCustom(String(waterConfig(next).quick[1]));
+    setCustom(
+      String(
+        day.goals.quick_water_ml
+          ? Math.round(
+              (day.goals.quick_water_ml / waterConfig(next).ml) * 1000,
+            ) / 1000
+          : waterConfig(next).quick[1],
+      ),
+    );
     setError("");
     try {
       await api.updateProfile({ water_unit: next });
@@ -135,7 +167,7 @@ export function ActivityGrid({
             type="button"
             className="activity-tile-main"
             onClick={() => {
-              setCustom(String(config.quick[1]));
+              setCustom(String(quickWater));
               setWaterOpen(true);
             }}
             aria-label="Log water"
@@ -162,11 +194,11 @@ export function ActivityGrid({
             type="button"
             className="activity-quick text-[#356e84]"
             disabled={busy}
-            onClick={() => void add(config.quick[1])}
-            aria-label={`Add ${drinkLabel(config.quick[1], unit)} of water`}
+            onClick={() => void add(quickWater)}
+            aria-label={`Add ${drinkLabel(quickWater, unit)} of water`}
           >
             <PlusIcon size={14} />
-            {busy ? "Saving…" : drinkLabel(config.quick[1], unit)}
+            {busy ? "Saving…" : drinkLabel(quickWater, unit)}
           </button>
         </article>
         <ActivityTile
@@ -174,7 +206,9 @@ export function ActivityGrid({
           value={`${day.totals.workout_minutes}`}
           unit="min"
           detail={
-            day.workouts.length
+            day.goals.workout_minutes
+              ? `${day.goals.workout_minutes} min personal goal`
+              : day.workouts.length
               ? `${day.workouts.length} ${day.workouts.length === 1 ? "session" : "sessions"} logged`
               : "A walk counts, too"
           }
@@ -182,13 +216,18 @@ export function ActivityGrid({
           tone="bg-[#edf3ed] border-[#dae6da]"
           action="Log exercise"
           onClick={() => onLog("workout")}
+          quickLabel={`${quickWorkout} min`}
+          quickBusy={quickBusy === "workout"}
+          onQuick={() => void quickAdd("workout", quickWorkout)}
         />
         <ActivityTile
           title="Meditation"
           value={`${day.totals.meditation_minutes}`}
           unit="min"
           detail={
-            day.meditations.length
+            day.goals.meditation_minutes
+              ? `${day.goals.meditation_minutes} min personal goal`
+              : day.meditations.length
               ? `${day.meditations.length} ${day.meditations.length === 1 ? "sitting" : "sittings"} logged`
               : "Take a little pause"
           }
@@ -196,6 +235,9 @@ export function ActivityGrid({
           tone="bg-[#f1eef7] border-[#e3ddec]"
           action="Log meditation"
           onClick={() => onLog("meditation")}
+          quickLabel={`${quickMeditation} min`}
+          quickBusy={quickBusy === "meditation"}
+          onQuick={() => void quickAdd("meditation", quickMeditation)}
         />
         <ActivityTile
           title="Journal"
@@ -400,6 +442,9 @@ function ActivityTile({
   tone,
   action,
   onClick,
+  quickLabel,
+  quickBusy,
+  onQuick,
 }: {
   title: string;
   value: string;
@@ -409,6 +454,9 @@ function ActivityTile({
   tone: string;
   action: string;
   onClick: () => void;
+  quickLabel?: string;
+  quickBusy?: boolean;
+  onQuick?: () => void;
 }) {
   return (
     <article className={`activity-tile ${tone}`}>
@@ -431,11 +479,12 @@ function ActivityTile({
       <button
         type="button"
         className="activity-quick"
-        onClick={onClick}
-        aria-label={`Add ${title.toLowerCase()} entry`}
+        onClick={onQuick || onClick}
+        disabled={quickBusy}
+        aria-label={onQuick ? `Add ${quickLabel} of ${title.toLowerCase()}` : `Add ${title.toLowerCase()} entry`}
       >
         <PlusIcon size={14} />
-        {action}
+        {quickBusy ? "Saving…" : quickLabel || action}
       </button>
     </article>
   );
