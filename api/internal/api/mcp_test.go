@@ -73,10 +73,15 @@ func TestMCPEndToEnd(t *testing.T) {
 		t.Fatalf("signals: %v", sum.Signals)
 	}
 
-	// A read token cannot write.
+	// A read token never sees the write tools, and cannot call them.
+	for _, tool := range tools {
+		if name := tool.(map[string]any)["name"]; name == "log_meal" || name == "log_workout" {
+			t.Fatalf("read token was offered %s", name)
+		}
+	}
 	code, res = mcpCall(t, r, readToken, `{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"log_meal","arguments":{"name":"Eggs","kcal":300}}}`)
-	if code != 200 || res["result"].(map[string]any)["isError"] != true {
-		t.Fatalf("read token write should be a tool error: %v", res)
+	if result, _ := res["result"].(map[string]any); code != 200 || (res["error"] == nil && result["isError"] != true) {
+		t.Fatalf("read token write should be refused: %v", res)
 	}
 	code, res = mcpCall(t, r, writeToken, `{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"log_meal","arguments":{"name":"Eggs","kcal":300,"protein_g":20,"slot":"breakfast"}}}`)
 	if code != 200 || res["result"].(map[string]any)["isError"] == true {

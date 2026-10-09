@@ -55,6 +55,20 @@ Today has a six-tile activity grid for water, exercise, meditation, journal, foo
 
 Daily readings resolve by source precedence (manual, Apple, Samsung, webhook, Garmin, Strava, 75hard). Manually edited fields win. Workouts match across sources using compatible activity types, starts within three minutes and comparable durations. Explicitly Strava-derived 75hard copies can also match the same name and exact start when elapsed and moving durations differ. Every matched source ID is retained, so later sync corrections update one workout. Direct Strava details take precedence over its 75hard copy. Distinct IDs from one provider, ambiguous matches and untimed sessions stay separate. Matching is heuristic because 75hard does not expose the original Strava activity ID. Different lab units stay in separate series.
 
+## Training
+
+Training logs strength sessions exercise by exercise: pick movements from a built-in catalog of about fifty warm-up, dumbbell and bodyweight exercises, then record each set's weight and reps (or seconds for holds). Each exercise has a form guide with start/end demonstration photos, a front/back muscle map, steps, cues and common mistakes. The photos are public-domain images from the Free Exercise DB. "Last time" shows your previous sets for that exercise. Unsaved sessions survive a reload. Weights are per dumbbell unless the exercise says one dumbbell (goblet squat, one-arm row).
+
+A weekly schedule fixes the sessions that happen at set times, e.g. strength with a trainer on Monday and Friday, 06:30–07:30. A logged workout of the slot's kind on a scheduled day counts as that session; everything else is freeform. The weekly exercise goal (minutes, Monday to Sunday) shows progress, fixed sessions done or missed, and the freeform minutes still needed.
+
+Sessions can be filled in afterwards: `POST /api/training/backfill`, or the `backfill_session` MCP tool, takes a date and the exercises with their sets — for example, read from a transcript of a recorded trainer session. It updates the session already logged for that day's fixed slot, or creates it with the slot's time and length.
+
+A saved session can be posted to Strava as a manual Weight Training activity, with the exercises as its description; posting again updates it. This needs the `activity:write` permission, so connections made before it was requested must reconnect once in Settings. Later imports recognise the uploaded activity and keep one session.
+
+## Nutrition plan
+
+The Nutrition plan page holds a plan as meals with portions and estimated macros, an optional eating window, and option rotations by weekday (e.g. a dinner rotation). Today shows the planned meals with the eating-window countdown. "Log as eaten" records a meal with the plan's numbers, and the plan's targets can become the daily goals. Plan estimates come from the plan itself; they are not measured values.
+
 ## Blood reports and analysis
 
 Upload PDF/text reports or enter values manually. Dynacare text reports have a deterministic parser; other textual reports can use optional AI extraction. Scanned PDFs without text need manual entry. Always review extracted markers against the original report. The 90-day milestone is a tracking aid, not a prescribed testing schedule. Nutrition estimates and AI suggestions need review.
@@ -70,7 +84,7 @@ Create a read-only token in Settings → API & MCP access. Configure a streamabl
 - URL: `https://lifeai.cc/mcp`
 - Header: `Authorization: Bearer <your token>`
 
-Start with `get_health_summary`, then `get_blood_markers`, `list_days`, `get_stats`, recipes or journal tools. `list_photos` and `get_photo` let your agent inspect stored images (thumbnails by default to reduce token usage). Tokens expire and can be revoked in Settings. Write tools require an explicit write scope. `/api/openapi.yaml` describes the REST interface; the MCP tool list is discoverable using `tools/list`.
+Start with `get_health_summary`, then `get_blood_markers`, `list_days`, `get_stats`, recipes or journal tools. Training tools: `list_exercises`, `get_exercise`, `log_workout` (with exercises and sets), `backfill_session`, `update_workout`, `list_workouts`, `get_exercise_history`, `get_week_training`, `get/set_training_schedule` and `push_workout_to_strava`. `get/set_nutrition_plan` manage the plan; `log_meal` accepts a `plan_key` to tick off a planned meal. `list_photos` and `get_photo` let your agent inspect stored images (thumbnails by default to reduce token usage). Tokens expire and can be revoked in Settings. Write tools require an explicit write scope; a read-only token is not shown them. The server is built on [go-mcp](https://github.com/anchoo2kewl/go-mcp), which wraps the official MCP Go SDK. `/api/openapi.yaml` describes the REST interface; the MCP tool list is discoverable using `tools/list`.
 
 ## Operations and limitations
 

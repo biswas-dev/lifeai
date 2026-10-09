@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import type {
@@ -455,6 +456,17 @@ export function WorkoutSheet({
 
   return (
     <Sheet open={open} onClose={onClose} title="Log exercise">
+      <Link
+        to={`/app/training/new?date=${date}`}
+        onClick={onClose}
+        className="mb-4 flex items-center justify-between rounded-xl border border-vital-500/25 bg-vital-500/5 px-3 py-3 text-sm"
+      >
+        <span>
+          <span className="block font-medium text-vital-500">Strength session with sets</span>
+          <span className="text-xs text-ink-500">Pick exercises, log weights and reps, see form guides</span>
+        </span>
+        <span className="text-vital-500">›</span>
+      </Link>
       <form onSubmit={save} className="space-y-4">
         <div>
           <span className="label">Kind</span>

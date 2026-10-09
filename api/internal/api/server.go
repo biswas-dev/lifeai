@@ -3,6 +3,9 @@
 package api
 
 import (
+	"net/http"
+	"sync"
+
 	gologin "github.com/anchoo2kewl/go-login"
 	"go.uber.org/zap"
 
@@ -27,6 +30,11 @@ type Server struct {
 	food *FoodEstimator
 	// syncer, when set, runs the 75hard pull. Nil means the bridge is off.
 	syncer *Hard75Syncer
+	// The MCP endpoint, built on first use from the registered tools.
+	mcpOnce    sync.Once
+	mcpHandler http.Handler
+	// Strava endpoints, overridden by tests.
+	stravaAPI, stravaTokenURL string
 }
 
 // NewServer builds a Server.

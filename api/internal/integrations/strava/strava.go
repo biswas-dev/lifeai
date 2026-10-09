@@ -1,5 +1,6 @@
 // Package strava is a small client for the Strava v3 API: the OAuth
-// exchange and refresh, and listing an athlete's activities.
+// exchange and refresh, listing an athlete's activities, and creating or
+// updating a manual activity for a session logged elsewhere.
 package strava
 
 import (
@@ -18,7 +19,9 @@ const (
 	AuthURL  = "https://www.strava.com/oauth/authorize"
 	TokenURL = "https://www.strava.com/oauth/token"
 	APIBase  = "https://www.strava.com/api/v3"
-	Scope    = "read,activity:read_all"
+	// activity:write lets a strength session logged here be posted to
+	// Strava. Connections made before it was requested can still import.
+	Scope = "read,activity:read_all,activity:write"
 )
 
 // Client holds the application credentials.
@@ -200,3 +203,87 @@ func (c *Client) Activities(ctx context.Context, accessToken string, after time.
 
 // ErrUnauthorized means the athlete revoked access.
 var ErrUnauthorized = fmt.Errorf("strava: access revoked")
+
+// CanWrite reports whether a granted scope allows uploading activities.
+func CanWrite(scope string) bool {
+	for _, s := range strings.Split(scope, ",") {
+		if strings.TrimSpace(s) == "activity:write" {
+			return true
+		}
+	}
+	return false
+}
+
+// ManualActivity is a session to post without a GPS file.
+type ManualActivity struct {
+	Name        string
+	SportType   string
+	StartLocal  time.Time
+	ElapsedSecs int
+	Description string
+	Trainer     bool
+}
+
+// ErrForbidden means the token lacks a scope the request needs.
+var ErrForbidden = fmt.Errorf("strava: permission missing; reconnect and allow activity uploads")
+
+// CreateActivity posts a manual activity and returns its id.
+func (c *Client) CreateActivity(ctx context.Context, accessToken string, a ManualActivity) (int64, error) {
+	form := url.Values{}
+	form.Set("name", a.Name)
+	form.Set("sport_type", a.SportType)
+	// Strava reads start_date_local in the athlete's own timezone.
+	form.Set("start_date_local", a.StartLocal.Format("2006-01-02T15:04:05"))
+	form.Set("elapsed_time", strconv.Itoa(a.ElapsedSecs))
+	form.Set("description", a.Description)
+	if a.Trainer {
+		form.Set("trainer", "1")
+	}
+	var out struct {
+		ID int64 `json:"id"`
+	}
+	if err := c.send(ctx, http.MethodPost, "/activities", accessToken, form, &out); err != nil {
+		return 0, err
+	}
+	if out.ID == 0 {
+		return 0, fmt.Errorf("strava: create returned no activity id")
+	}
+	return out.ID, nil
+}
+
+// UpdateActivity changes an existing activity's name and description.
+func (c *Client) UpdateActivity(ctx context.Context, accessToken string, id int64, name, description string) error {
+	form := url.Values{}
+	form.Set("name", name)
+	form.Set("description", description)
+	return c.send(ctx, http.MethodPut, "/activities/"+strconv.FormatInt(id, 10), accessToken, form, nil)
+}
+
+func (c *Client) send(ctx context.Context, method, path, accessToken string, form url.Values, out any) error {
+	req, err := http.NewRequestWithContext(ctx, method, c.api()+path, strings.NewReader(form.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return fmt.Errorf("strava: %s %s: %w", method, path, err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	switch {
+	case resp.StatusCode == http.StatusUnauthorized:
+		return ErrUnauthorized
+	case resp.StatusCode == http.StatusForbidden:
+		return ErrForbidden
+	case resp.StatusCode/100 != 2:
+		return fmt.Errorf("strava: %s %s failed (%d): %s", method, path, resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+	if out != nil {
+		if err := json.Unmarshal(body, out); err != nil {
+			return fmt.Errorf("strava: decoding response: %w", err)
+		}
+	}
+	return nil
+}

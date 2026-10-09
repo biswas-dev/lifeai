@@ -51,6 +51,8 @@ type Day struct {
 	Photos      []Photo        `json:"photos"`
 	Totals      Totals         `json:"totals"`
 	Goals       Goals          `json:"goals"`
+	// Week is exercise minutes for the Monday-to-Sunday week of this date.
+	Week WeekTraining `json:"week"`
 }
 
 // DaySummary is one row of the calendar / history list.
@@ -341,6 +343,9 @@ func (s *Server) loadDay(ctx context.Context, userID int64, date string) (Day, e
 		return day, err
 	}
 	if day.Goals, err = s.goals(ctx, userID); err != nil {
+		return day, err
+	}
+	if day.Week, err = s.weekTraining(ctx, userID, date); err != nil {
 		return day, err
 	}
 	for _, m := range day.Meals {

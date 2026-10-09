@@ -33,7 +33,24 @@ import type {
   Stats,
   User,
   Workout,
+  ExerciseCatalog,
+  ExerciseHistory,
+  NutritionPlan,
+  StravaUpload,
+  TrainingSchedule,
+  WeekTraining,
+  WorkoutExercise,
 } from "./types";
+
+export interface WorkoutBody {
+  date: string;
+  kind: string;
+  activity: string;
+  minutes: number;
+  started_at: string | null;
+  notes: string;
+  exercises: WorkoutExercise[];
+}
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 const TOKEN_KEY = "lifeai_token";
@@ -413,6 +430,66 @@ class ApiClient {
   deleteWorkout(id: number) {
     return this.request<{ ok: boolean }>(`/api/workouts/${id}`, {
       method: "DELETE",
+    });
+  }
+  workout(id: number) {
+    return this.request<Workout>(`/api/workouts/${id}`);
+  }
+  workouts(params: { from?: string; to?: string; kind?: string; limit?: number } = {}) {
+    const q = new URLSearchParams();
+    for (const [k, v] of Object.entries(params))
+      if (v !== undefined && v !== "") q.set(k, String(v));
+    return this.request<Workout[]>(`/api/workouts?${q}`);
+  }
+  updateWorkout(id: number, body: WorkoutBody) {
+    return this.request<Workout>(`/api/workouts/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  }
+  saveWorkout(id: number | null, body: WorkoutBody) {
+    return id
+      ? this.updateWorkout(id, body)
+      : this.createWorkout(body as unknown as Record<string, unknown>);
+  }
+  pushWorkoutToStrava(id: number) {
+    return this.request<StravaUpload>(`/api/workouts/${id}/strava`, {
+      method: "POST",
+    });
+  }
+  exercises() {
+    return this.request<ExerciseCatalog>("/api/exercises");
+  }
+  exerciseHistory(slug: string, name = "", limit = 5) {
+    const q = new URLSearchParams({ limit: String(limit) });
+    if (!slug) q.set("name", name);
+    return this.request<ExerciseHistory[]>(
+      `/api/exercises/${encodeURIComponent(slug || "custom")}/history?${q}`,
+    );
+  }
+  weekTraining(date?: string) {
+    return this.request<WeekTraining>(
+      `/api/training/week${date ? `?date=${date}` : ""}`,
+    );
+  }
+  trainingSchedule() {
+    return this.request<{ schedule: TrainingSchedule | null }>(
+      "/api/training/schedule",
+    );
+  }
+  saveTrainingSchedule(schedule: TrainingSchedule) {
+    return this.request<{ schedule: TrainingSchedule }>(
+      "/api/training/schedule",
+      { method: "PUT", body: JSON.stringify(schedule) },
+    );
+  }
+  nutritionPlan() {
+    return this.request<{ plan: NutritionPlan | null }>("/api/nutrition-plan");
+  }
+  saveNutritionPlan(plan: NutritionPlan) {
+    return this.request<{ plan: NutritionPlan }>("/api/nutrition-plan", {
+      method: "PUT",
+      body: JSON.stringify(plan),
     });
   }
   createMeditation(body: Record<string, unknown>) {

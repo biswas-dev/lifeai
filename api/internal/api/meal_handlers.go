@@ -36,6 +36,8 @@ type Meal struct {
 	// while a photo is being estimated in the background.
 	EstimateStatus string `json:"estimate_status"`
 	EstimateError  string `json:"estimate_error,omitempty"`
+	// PlanKey names the planned meal this fulfils, e.g. "dinner:salmon".
+	PlanKey string `json:"plan_key"`
 }
 
 // MealItem is one component of a meal.
@@ -72,6 +74,7 @@ type createMealRequest struct {
 	FatG     float64           `json:"fat_g"`
 	Notes    string            `json:"notes"`
 	Items    []mealItemPayload `json:"items"`
+	PlanKey  string            `json:"plan_key"`
 }
 
 var mealSlots = map[string]bool{"breakfast": true, "lunch": true, "dinner": true, "snack": true}
@@ -148,6 +151,11 @@ func (s *Server) HandleCreateMeal(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "calories out of range", "invalid_kcal")
 		return
 	}
+	planKey := strings.TrimSpace(req.PlanKey)
+	if len(planKey) > 80 {
+		respondError(w, http.StatusBadRequest, "plan_key is too long", "invalid_plan_key")
+		return
+	}
 	if err := s.ensureDay(ctx, userID, date); err != nil {
 		respondError(w, http.StatusInternalServerError, "could not save meal", "internal")
 		return
@@ -159,9 +167,9 @@ func (s *Server) HandleCreateMeal(w http.ResponseWriter, r *http.Request) {
 	}
 	defer tx.Rollback() //nolint:errcheck
 	res, err := tx.ExecContext(ctx, `
-		INSERT INTO meals (user_id, on_date, photo_id, name, slot, kcal, protein_g, carbs_g, fat_g, source, notes)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?)`,
-		userID, date, req.PhotoID, name, slot, kcal, prot, carbs, fat, strings.TrimSpace(req.Notes))
+		INSERT INTO meals (user_id, on_date, photo_id, name, slot, kcal, protein_g, carbs_g, fat_g, source, notes, plan_key)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)`,
+		userID, date, req.PhotoID, name, slot, kcal, prot, carbs, fat, strings.TrimSpace(req.Notes), planKey)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "could not save meal", "internal")
 		return
@@ -397,7 +405,7 @@ func insertItems(ctx context.Context, tx *sql.Tx, mealID int64, items []mealItem
 	return nil
 }
 
-const mealColumns = `id, on_date, photo_id, recipe_id, name, slot, kcal, protein_g, carbs_g, fat_g, source, notes, eaten_at, estimate_status, estimate_error`
+const mealColumns = `id, on_date, photo_id, recipe_id, name, slot, kcal, protein_g, carbs_g, fat_g, source, notes, eaten_at, estimate_status, estimate_error, plan_key`
 
 func (s *Server) mealByID(ctx context.Context, userID, id int64) (Meal, error) {
 	m, err := scanMeal(s.db.QueryRowContext(ctx, `SELECT `+mealColumns+` FROM meals WHERE id = ? AND user_id = ?`, id, userID))
@@ -457,7 +465,7 @@ func scanMeal(row scanner) (Meal, error) {
 	var m Meal
 	var photoID, recipeID sql.NullInt64
 	err := row.Scan(&m.ID, &m.Date, &photoID, &recipeID, &m.Name, &m.Slot, &m.Kcal, &m.ProteinG, &m.CarbsG, &m.FatG,
-		&m.Source, &m.Notes, &m.EatenAt, &m.EstimateStatus, &m.EstimateError)
+		&m.Source, &m.Notes, &m.EatenAt, &m.EstimateStatus, &m.EstimateError, &m.PlanKey)
 	if err != nil {
 		return m, err
 	}

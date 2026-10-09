@@ -206,7 +206,9 @@ export function ActivityGrid({
           value={`${day.totals.workout_minutes}`}
           unit="min"
           detail={
-            day.goals.workout_minutes
+            day.week?.goal
+              ? `${day.week.minutes} / ${day.week.goal} min this week`
+              : day.goals.workout_minutes
               ? `${day.goals.workout_minutes} min personal goal`
               : day.workouts.length
               ? `${day.workouts.length} ${day.workouts.length === 1 ? "session" : "sessions"} logged`

@@ -8,13 +8,17 @@ import { useResource } from "../lib/useResource";
 import { DayView } from "../components/DayView";
 import { ErrorText, Spinner } from "../components/ui";
 import { Sparkline } from "../components/Sparkline";
-import { DropIcon, SparkIcon } from "../components/Icons";
+import { DropIcon, DumbbellIcon, SparkIcon } from "../components/Icons";
+import { PlanToday } from "../components/PlanToday";
+import { WeekProgress } from "./Training";
+import { WeekPlan } from "../components/TrainingSchedule";
 
 export function Today() {
   const { user } = useAuth();
   const [dash, setDash] = useState<Dashboard | null>(null);
   const [error, setError] = useState("");
   const summary = useResource(() => api.healthSummary());
+  const plan = useResource(() => api.nutritionPlan());
   const loadVersion = useRef(0);
   const load = useCallback(async (d?: Day) => {
     const version = ++loadVersion.current;
@@ -119,6 +123,29 @@ export function Today() {
           <DayView day={dash.today} reload={load} />
         </div>
         <aside className="space-y-5">
+          {plan.data?.plan && (
+            <PlanToday
+              day={dash.today}
+              plan={plan.data.plan}
+              onChanged={() => void load()}
+            />
+          )}
+          {dash.today.week && (
+            <section className="card p-5">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <DumbbellIcon size={17} />
+                <h2>Movement this week</h2>
+              </div>
+              <WeekProgress week={dash.today.week} compact />
+              <WeekPlan week={dash.today.week} limit={2} />
+              <Link
+                to="/app/training"
+                className="mt-4 block text-xs font-medium text-vital-500"
+              >
+                {dash.today.week.goal ? "Open training" : "Set a weekly goal in Training"} →
+              </Link>
+            </section>
+          )}
           <section className="card overflow-hidden">
             <div className="flex items-center gap-2 border-b border-ink-800 p-5 text-sm font-semibold">
               <DropIcon size={17} />

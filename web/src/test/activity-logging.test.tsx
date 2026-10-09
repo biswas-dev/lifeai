@@ -119,13 +119,18 @@ test("exercise and meditation accept short sessions without challenge-duration r
   vi.mocked(api.createMeditation).mockResolvedValue({} as never);
   const saved = vi.fn();
   const view = render(
-    <WorkoutSheet
-      open
-      onClose={() => {}}
-      date={emptyDay.date}
-      onSaved={saved}
-    />,
+    <MemoryRouter>
+      <WorkoutSheet
+        open
+        onClose={() => {}}
+        date={emptyDay.date}
+        onSaved={saved}
+      />
+    </MemoryRouter>,
   );
+  expect(
+    screen.getByRole("link", { name: /Strength session with sets/ }),
+  ).toHaveAttribute("href", `/app/training/new?date=${emptyDay.date}`);
   fireEvent.click(screen.getByRole("button", { name: "10 min" }));
   fireEvent.click(screen.getByRole("button", { name: "Save exercise" }));
   await waitFor(() =>

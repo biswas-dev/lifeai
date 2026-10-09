@@ -17,8 +17,10 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/biswas-dev/lifeai/api/internal/dates"
 	"github.com/biswas-dev/lifeai/api/internal/health"
 	"github.com/biswas-dev/lifeai/api/internal/integrations/strava"
+	"github.com/go-chi/chi/v5"
 )
 
 // StravaStatus is the connection as shown in settings.
@@ -30,10 +32,15 @@ type StravaStatus struct {
 	LastSyncAt *string `json:"last_sync_at"`
 	LastError  string  `json:"last_error"`
 	Imported   int     `json:"imported"`
+	// CanUpload is false for a connection made before uploads were
+	// requested; reconnecting grants it.
+	CanUpload bool `json:"can_upload"`
 }
 
 func (s *Server) strava() *strava.Client {
-	return strava.New(s.cfg.StravaClientID, s.cfg.StravaClientSecret)
+	c := strava.New(s.cfg.StravaClientID, s.cfg.StravaClientSecret)
+	c.BaseURL, c.TokenURL = s.stravaAPI, s.stravaTokenURL
+	return c
 }
 
 // HandleStravaStatus reports the connection.
@@ -49,15 +56,16 @@ func (s *Server) HandleStravaStatus(w http.ResponseWriter, r *http.Request) {
 func (s *Server) stravaStatus(ctx context.Context, userID int64) (StravaStatus, error) {
 	st := StravaStatus{Configured: s.strava().Configured() && s.cipher.Enabled()}
 	var last sql.NullString
-	err := s.db.QueryRowContext(ctx, `SELECT username, athlete_id, last_sync_at, last_error, imported FROM strava_accounts WHERE user_id = ?`, userID).
-		Scan(&st.Username, &st.AthleteID, &last, &st.LastError, &st.Imported)
+	var scope string
+	err := s.db.QueryRowContext(ctx, `SELECT username, athlete_id, last_sync_at, last_error, imported, scope FROM strava_accounts WHERE user_id = ?`, userID).
+		Scan(&st.Username, &st.AthleteID, &last, &st.LastError, &st.Imported, &scope)
 	if errors.Is(err, sql.ErrNoRows) {
 		return st, nil
 	}
 	if err != nil {
 		return st, err
 	}
-	st.Connected = true
+	st.Connected, st.CanUpload = true, strava.CanWrite(scope)
 	st.LastSyncAt = strPtr(last)
 	return st, nil
 }
@@ -206,39 +214,11 @@ var stravaMu sync.Mutex
 func (s *Server) syncStrava(ctx context.Context, userID int64) (int, error) {
 	stravaMu.Lock()
 	defer stravaMu.Unlock()
-	var (
-		accessEnc, refreshEnc string
-		expiresAt             int64
-		lastSync              sql.NullString
-	)
-	err := s.db.QueryRowContext(ctx, `SELECT access_token_enc, refresh_token_enc, expires_at, last_sync_at FROM strava_accounts WHERE user_id = ?`, userID).
-		Scan(&accessEnc, &refreshEnc, &expiresAt, &lastSync)
-	if errors.Is(err, sql.ErrNoRows) {
-		return 0, errStravaNotConnected
-	}
-	if err != nil {
-		return 0, err
-	}
-	access, err := s.cipher.Open(accessEnc)
+	access, lastSync, err := s.stravaAccess(ctx, userID)
 	if err != nil {
 		return 0, err
 	}
 	client := s.strava()
-	if (strava.Token{ExpiresAt: expiresAt}).Expired() {
-		refresh, err := s.cipher.Open(refreshEnc)
-		if err != nil {
-			return 0, err
-		}
-		tok, err := client.Refresh(ctx, refresh)
-		if err != nil {
-			s.setStravaError(ctx, userID, err.Error())
-			return 0, err
-		}
-		access = tok.AccessToken
-		a, _ := s.cipher.Seal(tok.AccessToken)
-		rf, _ := s.cipher.Seal(tok.RefreshToken)
-		_, _ = s.db.ExecContext(ctx, `UPDATE strava_accounts SET access_token_enc = ?, refresh_token_enc = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`, a, rf, tok.ExpiresAt, userID)
-	}
 	after := time.Now().AddDate(0, 0, -90)
 	if lastSync.Valid {
 		if t, ok := parseDBTime(lastSync.String); ok {
@@ -295,6 +275,143 @@ func (s *Server) syncStrava(ctx context.Context, userID int64) (int, error) {
 	}
 	_, _ = s.db.ExecContext(ctx, `UPDATE strava_accounts SET last_sync_at = CURRENT_TIMESTAMP, last_error = '', imported = imported + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`, imported, userID)
 	return imported, nil
+}
+
+// stravaAccess returns a live access token, refreshing and storing a new
+// one when it has expired, and when the account last synced.
+func (s *Server) stravaAccess(ctx context.Context, userID int64) (string, sql.NullString, error) {
+	var (
+		accessEnc, refreshEnc string
+		expiresAt             int64
+		lastSync              sql.NullString
+	)
+	err := s.db.QueryRowContext(ctx, `SELECT access_token_enc, refresh_token_enc, expires_at, last_sync_at FROM strava_accounts WHERE user_id = ?`, userID).
+		Scan(&accessEnc, &refreshEnc, &expiresAt, &lastSync)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", lastSync, errStravaNotConnected
+	}
+	if err != nil {
+		return "", lastSync, err
+	}
+	access, err := s.cipher.Open(accessEnc)
+	if err != nil {
+		return "", lastSync, err
+	}
+	if !(strava.Token{ExpiresAt: expiresAt}).Expired() {
+		return access, lastSync, nil
+	}
+	refresh, err := s.cipher.Open(refreshEnc)
+	if err != nil {
+		return "", lastSync, err
+	}
+	tok, err := s.strava().Refresh(ctx, refresh)
+	if err != nil {
+		s.setStravaError(ctx, userID, err.Error())
+		return "", lastSync, err
+	}
+	a, _ := s.cipher.Seal(tok.AccessToken)
+	rf, _ := s.cipher.Seal(tok.RefreshToken)
+	_, _ = s.db.ExecContext(ctx, `UPDATE strava_accounts SET access_token_enc = ?, refresh_token_enc = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`, a, rf, tok.ExpiresAt, userID)
+	return tok.AccessToken, lastSync, nil
+}
+
+// StravaUpload is the outcome of posting a session to Strava.
+type StravaUpload struct {
+	StravaID string  `json:"strava_id"`
+	URL      string  `json:"url"`
+	Created  bool    `json:"created"`
+	Workout  Workout `json:"workout"`
+}
+
+// HandlePushWorkoutToStrava posts a session logged here to Strava, or
+// updates the name and description of the activity it is already linked to.
+func (s *Server) HandlePushWorkoutToStrava(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "workoutID"), 10, 64)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid workout id", "invalid_id")
+		return
+	}
+	up, err := s.pushWorkoutToStrava(r.Context(), UserID(r.Context()), id)
+	switch {
+	case err == nil:
+		respondJSON(w, http.StatusOK, up)
+	case errors.Is(err, sql.ErrNoRows):
+		respondError(w, http.StatusNotFound, "workout not found", "not_found")
+	case errors.Is(err, errStravaNotConnected):
+		respondError(w, http.StatusBadRequest, "Strava is not connected", "not_connected")
+	case errors.Is(err, errStravaNoWrite), errors.Is(err, strava.ErrForbidden):
+		respondError(w, http.StatusForbidden, "reconnect Strava in Settings and allow activity uploads", "strava_scope")
+	default:
+		respondError(w, http.StatusBadGateway, "Strava upload failed: "+err.Error(), "strava_failed")
+	}
+}
+
+var errStravaNoWrite = errors.New("strava connection cannot upload activities; reconnect it in Settings")
+
+var stravaSports = map[string]string{
+	"strength": "WeightTraining", "cardio": "Workout", "walk": "Walk", "run": "Run", "cycle": "Ride",
+	"swim": "Swim", "yoga": "Yoga", "hiit": "HighIntensityIntervalTraining", "sport": "Workout", "other": "Workout",
+}
+
+func (s *Server) pushWorkoutToStrava(ctx context.Context, userID, workoutID int64) (StravaUpload, error) {
+	// Hold the sync lock so a poll cannot import the new activity before its
+	// identity is attached to this workout.
+	stravaMu.Lock()
+	defer stravaMu.Unlock()
+	wk, err := s.workoutByID(ctx, userID, workoutID)
+	if err != nil {
+		return StravaUpload{}, err
+	}
+	var scope string
+	if err := s.db.QueryRowContext(ctx, `SELECT scope FROM strava_accounts WHERE user_id = ?`, userID).Scan(&scope); errors.Is(err, sql.ErrNoRows) {
+		return StravaUpload{}, errStravaNotConnected
+	} else if err != nil {
+		return StravaUpload{}, err
+	}
+	if !strava.CanWrite(scope) {
+		return StravaUpload{}, errStravaNoWrite
+	}
+	access, _, err := s.stravaAccess(ctx, userID)
+	if err != nil {
+		return StravaUpload{}, err
+	}
+	name := wk.Activity
+	if name == "" {
+		name = strings.ToUpper(wk.Kind[:1]) + wk.Kind[1:] + " session"
+	}
+	desc := describeWorkout(wk)
+	client := s.strava()
+	up := StravaUpload{StravaID: wk.StravaID}
+	if wk.StravaID != "" {
+		stravaID, _ := strconv.ParseInt(wk.StravaID, 10, 64)
+		if err := client.UpdateActivity(ctx, access, stravaID, name, desc); err != nil {
+			return up, err
+		}
+	} else {
+		loc := s.userLocation(ctx)
+		start := dates.LocalNoon(wk.Date, loc)
+		if wk.StartedAt != nil {
+			if t, ok := parseDBTime(*wk.StartedAt); ok {
+				start = t.In(loc)
+			}
+		}
+		sport := stravaSports[wk.Kind]
+		stravaID, err := client.CreateActivity(ctx, access, strava.ManualActivity{
+			Name: name, SportType: sport, StartLocal: start, ElapsedSecs: wk.Minutes * 60, Description: desc,
+			Trainer: wk.Kind == "strength" || wk.Kind == "yoga" || (wk.Kind == "cycle" && wk.DistanceKm == nil),
+		})
+		if err != nil {
+			return up, err
+		}
+		up.StravaID, up.Created = strconv.FormatInt(stravaID, 10), true
+		if _, err := s.db.ExecContext(ctx, `INSERT INTO workout_sources (user_id, source, external_id, workout_id) VALUES (?, 'strava', ?, ?)
+			ON CONFLICT(user_id, source, external_id) DO UPDATE SET workout_id = excluded.workout_id`, userID, up.StravaID, wk.ID); err != nil {
+			return up, err
+		}
+	}
+	up.URL = "https://www.strava.com/activities/" + up.StravaID
+	up.Workout, err = s.workoutByID(ctx, userID, workoutID)
+	return up, err
 }
 
 func (s *Server) setStravaError(ctx context.Context, userID int64, msg string) {

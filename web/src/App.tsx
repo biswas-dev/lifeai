@@ -35,6 +35,17 @@ const Coach = lazy(() =>
 const Journal = lazy(() =>
   import("./routes/Journal").then((m) => ({ default: m.Journal })),
 );
+const Training = lazy(() =>
+  import("./routes/Training").then((m) => ({ default: m.Training })),
+);
+const TrainingSession = lazy(() =>
+  import("./routes/TrainingSession").then((m) => ({
+    default: m.TrainingSession,
+  })),
+);
+const Nutrition = lazy(() =>
+  import("./routes/Nutrition").then((m) => ({ default: m.Nutrition })),
+);
 const Blood = lazy(() =>
   import("./routes/Blood").then((m) => ({ default: m.Blood })),
 );
@@ -124,6 +135,9 @@ export default function App() {
               <Route path="trends" element={<Trends />} />
               <Route path="coach" element={<Coach />} />
               <Route path="journal" element={<Journal />} />
+              <Route path="training" element={<Training />} />
+              <Route path="training/:id" element={<TrainingSession />} />
+              <Route path="nutrition" element={<Nutrition />} />
               <Route path="blood" element={<Blood />} />
               <Route path="settings" element={<Settings />} />
             </Route>

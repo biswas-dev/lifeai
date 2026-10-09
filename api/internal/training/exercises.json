@@ -1,0 +1,1673 @@
+[
+  {
+    "slug": "toe-touch",
+    "name": "Standing toe touch",
+    "aliases": [
+      "toe touches",
+      "forward fold"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "hamstrings"
+    ],
+    "secondary": [
+      "lower-back",
+      "calves"
+    ],
+    "demo": "Standing_Toe_Touches",
+    "summary": "A gentle, rhythmic forward fold that wakes up the backs of the legs and the spine.",
+    "steps": [
+      "Stand tall, feet hip-width apart, knees soft.",
+      "Hinge at the hips and let your spine round slowly as you reach toward your toes.",
+      "Go only as far as is comfortable, then roll back up one vertebra at a time."
+    ],
+    "cues": [
+      "Move slowly, no bouncing",
+      "Breathe out on the way down",
+      "Keep a small bend in the knees"
+    ],
+    "mistakes": [
+      "Bouncing to force range",
+      "Locking the knees",
+      "Holding the breath"
+    ]
+  },
+  {
+    "slug": "leg-swing",
+    "name": "Leg swings",
+    "aliases": [
+      "leg swings front to back",
+      "lateral leg swings",
+      "wall-supported leg swings"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "per_side": true,
+    "primary": [
+      "hip-flexors",
+      "hamstrings"
+    ],
+    "secondary": [
+      "glutes",
+      "adductors"
+    ],
+    "demo": "Front_Leg_Raises",
+    "summary": "Dynamic hip mobility: swing one leg forward and back, then side to side, holding a wall for balance.",
+    "steps": [
+      "Stand side-on to a wall with one hand on it for balance.",
+      "Swing the outside leg forward and back in a smooth arc, growing the range gradually.",
+      "Face the wall and swing the same leg across your body and out to the side.",
+      "Repeat on the other leg."
+    ],
+    "cues": [
+      "Tall torso — the leg moves, not the back",
+      "Let momentum build gradually",
+      "Standing knee soft"
+    ],
+    "mistakes": [
+      "Leaning or twisting the torso to swing higher",
+      "Kicking hard from the start"
+    ]
+  },
+  {
+    "slug": "cat-cow",
+    "name": "Cat–cow",
+    "aliases": [
+      "cat cow",
+      "cat camel"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "lower-back"
+    ],
+    "secondary": [
+      "upper-back",
+      "abs"
+    ],
+    "demo": "Cat_Stretch",
+    "summary": "Alternately round and arch the spine on hands and knees to mobilise the whole back.",
+    "steps": [
+      "Start on hands and knees: hands under shoulders, knees under hips.",
+      "Breathe out, tuck the tailbone and round your back toward the ceiling, chin toward chest (cat).",
+      "Breathe in, let the belly drop and lift the chest and tailbone (cow).",
+      "Flow slowly between the two."
+    ],
+    "cues": [
+      "Move segment by segment",
+      "Push the floor away in the cat",
+      "Match the movement to your breath"
+    ],
+    "mistakes": [
+      "Moving only the neck",
+      "Rushing through the range"
+    ]
+  },
+  {
+    "slug": "childs-pose-cobra",
+    "name": "Child's pose ↔ cobra",
+    "aliases": [
+      "child's pose to cobra",
+      "childs pose",
+      "cobra",
+      "upward dog flow"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "lower-back"
+    ],
+    "secondary": [
+      "lats",
+      "abs",
+      "hip-flexors",
+      "glutes"
+    ],
+    "demo": "Childs_Pose",
+    "summary": "Flow from sitting back on the heels (spine flexed, lats stretched) forward into a low cobra (spine extended).",
+    "steps": [
+      "From hands and knees, sit your hips back toward your heels with arms long in front — child's pose.",
+      "Shift forward, lowering your hips toward the floor between your hands.",
+      "Press gently through the hands to lift the chest into a low cobra, shoulders down and back.",
+      "Push back into child's pose. Repeat four or five times."
+    ],
+    "cues": [
+      "Slow, with the breath",
+      "Shoulders away from the ears in cobra",
+      "Only lift as high as the low back is comfortable"
+    ],
+    "mistakes": [
+      "Cranking the neck back",
+      "Forcing the cobra with straight, locked arms"
+    ]
+  },
+  {
+    "slug": "seated-spinal-twist",
+    "name": "Seated spinal twist",
+    "aliases": [
+      "spinal twist",
+      "torso twist",
+      "floor twist"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "per_side": true,
+    "primary": [
+      "obliques"
+    ],
+    "secondary": [
+      "lower-back",
+      "upper-back",
+      "glutes"
+    ],
+    "demo": "Spinal_Stretch",
+    "summary": "A controlled rotation through the upper back while seated tall.",
+    "steps": [
+      "Sit tall on the floor or a bench.",
+      "Grow tall through the crown of your head, then rotate the ribcage to one side.",
+      "Use your hands lightly to hold the end range, breathing into it.",
+      "Return to centre and repeat on the other side."
+    ],
+    "cues": [
+      "Lengthen before you twist",
+      "Rotate from the ribs, not by yanking with the arms"
+    ],
+    "mistakes": [
+      "Slumping as you rotate",
+      "Forcing the end range"
+    ]
+  },
+  {
+    "slug": "lying-spinal-twist",
+    "name": "Lying spinal twist",
+    "aliases": [
+      "supine twist",
+      "windmills",
+      "lying crossover"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "per_side": true,
+    "primary": [
+      "obliques"
+    ],
+    "secondary": [
+      "glutes",
+      "lower-back"
+    ],
+    "demo": "",
+    "summary": "Lying on your back, cross one leg over the body toward the floor while the shoulders stay down.",
+    "steps": [
+      "Lie on your back, arms out wide.",
+      "Bend one knee and let it fall across your body toward the floor on the other side.",
+      "Keep both shoulders heavy on the floor; turn your head the opposite way if comfortable.",
+      "Return and switch sides."
+    ],
+    "cues": [
+      "Shoulders stay down",
+      "Exhale into the twist"
+    ],
+    "mistakes": [
+      "Lifting the opposite shoulder",
+      "Forcing the knee to the floor"
+    ]
+  },
+  {
+    "slug": "standing-windmill-toe-touch",
+    "name": "Wide-stance cross-over toe touch",
+    "aliases": [
+      "windmill toe touch",
+      "cross-over bends",
+      "wide stance crossover"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "per_side": true,
+    "primary": [
+      "hamstrings",
+      "obliques"
+    ],
+    "secondary": [
+      "adductors",
+      "lower-back"
+    ],
+    "demo": "",
+    "summary": "Feet wide, hinge and rotate to reach one hand toward the opposite foot, alternating sides.",
+    "steps": [
+      "Stand with feet wide and arms out to the sides.",
+      "Hinge at the hips and rotate to bring one hand toward the opposite foot; the other arm reaches up.",
+      "Return to standing and alternate sides."
+    ],
+    "cues": [
+      "Hinge at the hips first, then rotate",
+      "Soft knees",
+      "Smooth tempo"
+    ],
+    "mistakes": [
+      "Rounding hard through the low back to reach further",
+      "Moving fast and jerky"
+    ]
+  },
+  {
+    "slug": "hip-flexor-stretch",
+    "name": "Kneeling hip flexor stretch",
+    "aliases": [
+      "half-kneeling hip flexor",
+      "lunge stretch"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "per_side": true,
+    "primary": [
+      "hip-flexors"
+    ],
+    "secondary": [
+      "quads"
+    ],
+    "demo": "Kneeling_Hip_Flexor",
+    "summary": "Half-kneeling stretch for the front of the hip, which tightens with long sitting.",
+    "steps": [
+      "Kneel on one knee (pad it), other foot flat in front.",
+      "Squeeze the glute of the kneeling side and tuck the pelvis slightly.",
+      "Shift forward until you feel a stretch at the front of the hip. Hold, then switch."
+    ],
+    "cues": [
+      "Squeeze the back glute",
+      "Ribs down, don't arch"
+    ],
+    "mistakes": [
+      "Arching the low back instead of opening the hip"
+    ]
+  },
+  {
+    "slug": "hamstring-stretch",
+    "name": "Hamstring stretch",
+    "aliases": [
+      "supported hamstring stretch",
+      "leg-up stretch"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "per_side": true,
+    "primary": [
+      "hamstrings"
+    ],
+    "secondary": [
+      "calves",
+      "lower-back"
+    ],
+    "demo": "Hamstring_Stretch",
+    "summary": "A held stretch for the back of the thigh, done lying or with the heel on a low support.",
+    "steps": [
+      "Lie on your back, or place a heel on a low step with the leg nearly straight.",
+      "Keep your back flat and hinge (or raise the leg) until you feel a stretch behind the thigh.",
+      "Hold 20–30 seconds, breathing slowly, then switch legs."
+    ],
+    "cues": [
+      "Flat back, hinge at the hip",
+      "Mild tension, never sharp"
+    ],
+    "mistakes": [
+      "Rounding the back to reach further",
+      "Bouncing"
+    ]
+  },
+  {
+    "slug": "arm-circles",
+    "name": "Arm circles",
+    "aliases": [
+      "shoulder circles"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "side-delts"
+    ],
+    "secondary": [
+      "front-delts",
+      "rear-delts",
+      "traps"
+    ],
+    "demo": "Arm_Circles",
+    "summary": "Small-to-large circles with straight arms to warm the shoulders.",
+    "steps": [
+      "Stand tall with arms out to the sides at shoulder height.",
+      "Make small circles forward, gradually growing them.",
+      "Reverse direction."
+    ],
+    "cues": [
+      "Shoulders down, away from ears",
+      "Start small"
+    ],
+    "mistakes": [
+      "Shrugging",
+      "Swinging wildly"
+    ]
+  },
+  {
+    "slug": "hip-circles",
+    "name": "Standing hip circles",
+    "aliases": [
+      "hip rotations"
+    ],
+    "category": "warmup",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "glutes"
+    ],
+    "secondary": [
+      "hip-flexors",
+      "adductors",
+      "lower-back"
+    ],
+    "demo": "Standing_Hip_Circles",
+    "summary": "Hands on hips, draw large circles with the pelvis to mobilise the hips.",
+    "steps": [
+      "Stand with hands on hips, feet shoulder-width apart.",
+      "Circle the hips slowly one way, then the other."
+    ],
+    "cues": [
+      "Keep the shoulders fairly still",
+      "Make the circle as big as is comfortable"
+    ],
+    "mistakes": [
+      "Moving only the upper body"
+    ]
+  },
+  {
+    "slug": "bodyweight-squat",
+    "name": "Bodyweight squat",
+    "aliases": [
+      "air squat",
+      "squats"
+    ],
+    "category": "legs",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "hamstrings",
+      "adductors",
+      "calves"
+    ],
+    "demo": "Bodyweight_Squat",
+    "summary": "The basic squat pattern: sit down and back between your heels, then stand up.",
+    "steps": [
+      "Stand with feet about shoulder-width apart, toes turned out slightly.",
+      "Brace your trunk, then bend knees and hips together to sit down between your heels.",
+      "Go as low as you can keep your heels down and back neutral.",
+      "Drive through the whole foot to stand up tall."
+    ],
+    "cues": [
+      "Knees track over the toes",
+      "Chest proud",
+      "Weight across the whole foot"
+    ],
+    "mistakes": [
+      "Knees caving inward",
+      "Heels lifting",
+      "Rounding the low back at the bottom"
+    ]
+  },
+  {
+    "slug": "goblet-squat",
+    "name": "Dumbbell goblet squat",
+    "aliases": [
+      "goblet squats",
+      "goblet squat"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "one dumbbell",
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "adductors",
+      "hamstrings",
+      "abs",
+      "upper-back"
+    ],
+    "demo": "Goblet_Squat",
+    "summary": "A squat holding one dumbbell vertically against your chest. The front load keeps you upright and teaches good depth.",
+    "steps": [
+      "Hold one dumbbell vertically by the top end, cupped against your chest, elbows pointing down.",
+      "Stand with feet slightly wider than hips, toes turned out a little.",
+      "Brace, then sit down between your heels, keeping the chest up and the dumbbell close.",
+      "At the bottom, elbows sit just inside the knees. Drive up through the whole foot."
+    ],
+    "cues": [
+      "Dumbbell glued to the chest",
+      "Elbows inside the knees at the bottom",
+      "Push the knees out"
+    ],
+    "mistakes": [
+      "Letting the dumbbell drift away from the body",
+      "Knees caving in",
+      "Tipping forward onto the toes"
+    ]
+  },
+  {
+    "slug": "dumbbell-squat",
+    "name": "Dumbbell squat",
+    "aliases": [
+      "dumbbells at sides squat"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "hamstrings",
+      "adductors",
+      "forearms"
+    ],
+    "demo": "Dumbbell_Squat",
+    "summary": "A squat holding a dumbbell in each hand at your sides.",
+    "steps": [
+      "Stand tall with a dumbbell at each side, palms facing in.",
+      "Sit down between your heels, keeping the chest up and arms hanging straight.",
+      "Drive back up through the whole foot."
+    ],
+    "cues": [
+      "Arms are just hooks",
+      "Chest proud",
+      "Knees over toes"
+    ],
+    "mistakes": [
+      "Leaning forward",
+      "Knees caving in"
+    ]
+  },
+  {
+    "slug": "step-up",
+    "name": "Dumbbell step-up",
+    "aliases": [
+      "step ups",
+      "box step-up"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "per_side": true,
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "hamstrings",
+      "calves",
+      "adductors"
+    ],
+    "demo": "Dumbbell_Step_Ups",
+    "summary": "Step onto a stable box or bench with a dumbbell in each hand. Finish all reps on one leg before switching.",
+    "steps": [
+      "Use a sturdy, non-slip box or bench about knee height or lower.",
+      "Place the whole lead foot on the box.",
+      "Press through the lead heel to stand up on the box; bring the trailing foot up.",
+      "Step back down with the trailing leg under control. Keep the same lead leg for the set, then switch."
+    ],
+    "cues": [
+      "Drive through the lead heel — don't push off the back foot",
+      "Whole foot on the box",
+      "Tall torso"
+    ],
+    "mistakes": [
+      "Using an unstable surface",
+      "Pushing off the floor with the trailing leg",
+      "Lead knee caving inward"
+    ]
+  },
+  {
+    "slug": "dumbbell-lunge",
+    "name": "Dumbbell lunge",
+    "aliases": [
+      "forward lunge",
+      "lunges"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "per_side": true,
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "hamstrings",
+      "adductors",
+      "calves"
+    ],
+    "demo": "Dumbbell_Lunges",
+    "summary": "Step forward into a split stance, lower until both knees are bent about 90°, and push back.",
+    "steps": [
+      "Stand tall with a dumbbell at each side.",
+      "Take a long step forward and lower the back knee toward the floor.",
+      "Push through the front heel to return to standing."
+    ],
+    "cues": [
+      "Front knee over the middle of the foot",
+      "Torso tall",
+      "Back knee hovers just above the floor"
+    ],
+    "mistakes": [
+      "Short steps that drive the knee far past the toes",
+      "Front knee collapsing inward"
+    ]
+  },
+  {
+    "slug": "reverse-lunge",
+    "name": "Dumbbell reverse lunge",
+    "aliases": [
+      "rear lunge",
+      "backward lunge"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "per_side": true,
+    "primary": [
+      "glutes",
+      "quads"
+    ],
+    "secondary": [
+      "hamstrings",
+      "adductors"
+    ],
+    "demo": "Dumbbell_Rear_Lunge",
+    "summary": "A lunge stepping backward — easier on the knees and balance than the forward version.",
+    "steps": [
+      "Stand tall with a dumbbell at each side.",
+      "Step one foot back and lower the back knee toward the floor.",
+      "Drive through the front heel to return."
+    ],
+    "cues": [
+      "Most of the weight in the front leg",
+      "Slight forward lean is fine"
+    ],
+    "mistakes": [
+      "Stepping back too narrow (tightrope stance)"
+    ]
+  },
+  {
+    "slug": "split-squat",
+    "name": "Dumbbell split squat",
+    "aliases": [
+      "static lunge"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "per_side": true,
+    "primary": [
+      "quads",
+      "glutes"
+    ],
+    "secondary": [
+      "adductors",
+      "hamstrings"
+    ],
+    "demo": "Split_Squat_with_Dumbbells",
+    "summary": "A lunge without stepping: feet stay fixed in a split stance as you lower and rise.",
+    "steps": [
+      "Take a long split stance with a dumbbell in each hand.",
+      "Lower straight down until the back knee nearly touches the floor.",
+      "Press up through the front foot. Finish the set, then switch legs."
+    ],
+    "cues": [
+      "Straight down and up, like an elevator",
+      "Front heel stays heavy"
+    ],
+    "mistakes": [
+      "Bouncing out of the bottom",
+      "Narrow stance"
+    ]
+  },
+  {
+    "slug": "dumbbell-rdl",
+    "name": "Dumbbell Romanian deadlift",
+    "aliases": [
+      "dumbbell deadlift",
+      "hip hinge",
+      "rdl",
+      "stiff-leg deadlift"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "hamstrings",
+      "glutes"
+    ],
+    "secondary": [
+      "lower-back",
+      "forearms",
+      "upper-back"
+    ],
+    "demo": "Stiff-Legged_Dumbbell_Deadlift",
+    "summary": "The hip-hinge: push the hips back with soft knees, sliding the dumbbells down the legs, then stand by driving the hips forward.",
+    "steps": [
+      "Stand tall with a dumbbell in each hand in front of your thighs, knees slightly bent.",
+      "Push your hips back as if closing a car door with your bum. Let the dumbbells slide down close to your legs.",
+      "Keep your back flat and neck long; stop when you feel a strong hamstring stretch, usually around mid-shin.",
+      "Squeeze the glutes and drive the hips forward to stand up tall."
+    ],
+    "cues": [
+      "Hips back, not down",
+      "Dumbbells close to the legs",
+      "Knees soft but fixed",
+      "Flat back throughout"
+    ],
+    "mistakes": [
+      "Squatting the weight down instead of hinging",
+      "Rounding the back to reach lower",
+      "Letting the dumbbells drift forward",
+      "Leaning back at the top"
+    ]
+  },
+  {
+    "slug": "calf-raise",
+    "name": "Standing dumbbell calf raise",
+    "aliases": [
+      "calf raises"
+    ],
+    "category": "legs",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "calves"
+    ],
+    "secondary": [],
+    "demo": "Standing_Dumbbell_Calf_Raise",
+    "summary": "Rise onto the balls of your feet and lower slowly, holding dumbbells at your sides.",
+    "steps": [
+      "Stand tall, dumbbells at your sides (balls of the feet on a step for more range).",
+      "Rise as high as you can onto your toes, pause.",
+      "Lower slowly, all the way down."
+    ],
+    "cues": [
+      "Pause at the top",
+      "Slow on the way down"
+    ],
+    "mistakes": [
+      "Bouncing",
+      "Bending the knees to help"
+    ]
+  },
+  {
+    "slug": "glute-bridge",
+    "name": "Glute bridge",
+    "aliases": [
+      "hip bridge",
+      "bridge"
+    ],
+    "category": "legs",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "glutes"
+    ],
+    "secondary": [
+      "hamstrings",
+      "lower-back",
+      "abs"
+    ],
+    "demo": "Butt_Lift_Bridge",
+    "summary": "Lying on your back, drive the hips up by squeezing the glutes.",
+    "steps": [
+      "Lie on your back, knees bent, feet flat and hip-width apart.",
+      "Press through the heels and squeeze the glutes to lift the hips until knees, hips and shoulders line up.",
+      "Pause, then lower with control."
+    ],
+    "cues": [
+      "Squeeze the glutes at the top",
+      "Ribs down — don't arch the low back"
+    ],
+    "mistakes": [
+      "Overarching the low back",
+      "Pushing through the toes"
+    ]
+  },
+  {
+    "slug": "incline-dumbbell-press",
+    "name": "Incline dumbbell chest press",
+    "aliases": [
+      "incline press",
+      "incline bench press",
+      "incline chest press"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "chest",
+      "front-delts"
+    ],
+    "secondary": [
+      "triceps"
+    ],
+    "demo": "Incline_Dumbbell_Press",
+    "summary": "A press on a bench set to roughly 30–45° that emphasises the upper chest.",
+    "steps": [
+      "Set the bench to about 30–45°. Sit back with a dumbbell on each thigh.",
+      "Kick the dumbbells up one at a time as you lie back; feet flat, shoulder blades pulled back and down.",
+      "Start with the dumbbells over your upper chest, palms forward or slightly turned in.",
+      "Lower under control until elbows are just below the bench line, forearms vertical. Press up and slightly together."
+    ],
+    "cues": [
+      "Shoulder blades pinned back and down",
+      "Elbows about 45° from the body, not flared to 90°",
+      "Forearms vertical"
+    ],
+    "mistakes": [
+      "Bench too steep (turns it into a shoulder press)",
+      "Flaring the elbows",
+      "Bouncing at the bottom",
+      "Lifting the hips off the bench"
+    ]
+  },
+  {
+    "slug": "dumbbell-bench-press",
+    "name": "Flat dumbbell bench press",
+    "aliases": [
+      "dumbbell chest press",
+      "bench press"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "chest"
+    ],
+    "secondary": [
+      "front-delts",
+      "triceps"
+    ],
+    "demo": "Dumbbell_Bench_Press",
+    "summary": "A press lying flat on a bench, the foundation chest exercise.",
+    "steps": [
+      "Lie on a flat bench with feet flat, shoulder blades squeezed together.",
+      "Start with dumbbells above the chest, arms straight.",
+      "Lower to the sides of the chest with elbows about 45° from the body.",
+      "Press back up."
+    ],
+    "cues": [
+      "Stable shoulder blades",
+      "Controlled lowering",
+      "Forearms vertical"
+    ],
+    "mistakes": [
+      "Elbows flared to 90°",
+      "Dumbbells drifting toward the face"
+    ]
+  },
+  {
+    "slug": "push-up",
+    "name": "Push-up",
+    "aliases": [
+      "pushups",
+      "press-up"
+    ],
+    "category": "push",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "chest",
+      "triceps"
+    ],
+    "secondary": [
+      "front-delts",
+      "abs"
+    ],
+    "demo": "Pushups",
+    "summary": "Lower your body as a rigid plank and press back up.",
+    "steps": [
+      "Hands slightly wider than shoulders, body in a straight line from head to heels.",
+      "Lower the chest toward the floor, elbows about 45° from the body.",
+      "Press back up, keeping the plank."
+    ],
+    "cues": [
+      "Squeeze glutes and brace the core",
+      "Chest and hips move together"
+    ],
+    "mistakes": [
+      "Sagging hips",
+      "Flared elbows",
+      "Half range"
+    ]
+  },
+  {
+    "slug": "incline-push-up",
+    "name": "Incline push-up",
+    "aliases": [
+      "bench push-up",
+      "hands-elevated push-up"
+    ],
+    "category": "push",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "chest",
+      "triceps"
+    ],
+    "secondary": [
+      "front-delts",
+      "abs"
+    ],
+    "demo": "Incline_Push-Up",
+    "summary": "A push-up with hands on a bench or wall — easier, and great for building up to floor push-ups.",
+    "steps": [
+      "Hands on a sturdy bench, body in a straight line.",
+      "Lower the chest to the edge.",
+      "Press back up."
+    ],
+    "cues": [
+      "Straight line head to heels",
+      "Higher surface = easier"
+    ],
+    "mistakes": [
+      "Sagging hips",
+      "Bending at the waist"
+    ]
+  },
+  {
+    "slug": "dumbbell-fly",
+    "name": "Dumbbell chest fly",
+    "aliases": [
+      "flyes",
+      "chest fly"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "chest"
+    ],
+    "secondary": [
+      "front-delts"
+    ],
+    "demo": "Dumbbell_Flyes",
+    "summary": "Open the arms in a wide arc with a fixed slight elbow bend, then hug them back together.",
+    "steps": [
+      "Lie on a bench with dumbbells above your chest, palms facing each other, elbows slightly bent.",
+      "Open the arms in a wide arc until you feel a chest stretch.",
+      "Bring them back together along the same arc."
+    ],
+    "cues": [
+      "Elbow angle never changes",
+      "Stretch, don't strain"
+    ],
+    "mistakes": [
+      "Turning it into a press",
+      "Going too deep with heavy weight"
+    ]
+  },
+  {
+    "slug": "standing-dumbbell-shoulder-press",
+    "name": "Standing dumbbell shoulder press",
+    "aliases": [
+      "shoulder press",
+      "overhead press",
+      "military press"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "front-delts",
+      "side-delts"
+    ],
+    "secondary": [
+      "triceps",
+      "traps",
+      "abs"
+    ],
+    "demo": "Standing_Dumbbell_Press",
+    "summary": "Press dumbbells from the shoulders to overhead while standing — the core has to keep you from arching.",
+    "steps": [
+      "Stand with feet hip-width, dumbbells at shoulder height, palms forward or slightly in.",
+      "Brace your abs and squeeze your glutes so the ribs stay down.",
+      "Press straight up until the arms are long overhead, dumbbells over the shoulders.",
+      "Lower under control back to shoulder height."
+    ],
+    "cues": [
+      "Ribs down, glutes tight — no back arch",
+      "Wrists stacked over elbows",
+      "Head through at the top"
+    ],
+    "mistakes": [
+      "Leaning back to finish the rep",
+      "Pressing forward instead of up",
+      "Using leg drive without meaning to"
+    ]
+  },
+  {
+    "slug": "seated-dumbbell-shoulder-press",
+    "name": "Seated dumbbell shoulder press",
+    "aliases": [
+      "seated overhead press"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "front-delts",
+      "side-delts"
+    ],
+    "secondary": [
+      "triceps",
+      "traps"
+    ],
+    "demo": "Dumbbell_Shoulder_Press",
+    "summary": "The shoulder press seated on an upright bench, for more stability.",
+    "steps": [
+      "Sit on a bench set upright, back supported.",
+      "Start with dumbbells at shoulder height.",
+      "Press overhead, then lower with control."
+    ],
+    "cues": [
+      "Back against the pad",
+      "Wrists over elbows"
+    ],
+    "mistakes": [
+      "Arching off the pad",
+      "Half range"
+    ]
+  },
+  {
+    "slug": "arnold-press",
+    "name": "Arnold press",
+    "aliases": [],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "front-delts",
+      "side-delts"
+    ],
+    "secondary": [
+      "triceps"
+    ],
+    "demo": "Arnold_Dumbbell_Press",
+    "summary": "A shoulder press that starts palms-in in front of the face and rotates to palms-forward overhead.",
+    "steps": [
+      "Start with dumbbells in front of your shoulders, palms facing you.",
+      "Press up while rotating the palms to face forward.",
+      "Reverse the rotation on the way down."
+    ],
+    "cues": [
+      "Smooth rotation",
+      "Controlled lowering"
+    ],
+    "mistakes": [
+      "Rushing the rotation",
+      "Arching the back"
+    ]
+  },
+  {
+    "slug": "lateral-raise",
+    "name": "Dumbbell lateral raise",
+    "aliases": [
+      "side raise",
+      "lateral raises",
+      "side lateral raise"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "side-delts"
+    ],
+    "secondary": [
+      "traps",
+      "front-delts"
+    ],
+    "demo": "Side_Lateral_Raise",
+    "summary": "Raise light dumbbells out to the sides to shoulder height, targeting the middle part of the shoulder.",
+    "steps": [
+      "Stand tall with light dumbbells at your sides, a slight bend in the elbows.",
+      "Raise the arms out to the sides, leading with the elbows, until they reach shoulder height.",
+      "Pause briefly, then lower slowly."
+    ],
+    "cues": [
+      "Slight, fixed elbow bend",
+      "Lead with the elbows",
+      "Stop at shoulder height",
+      "Shoulders down — don't shrug"
+    ],
+    "mistakes": [
+      "Swinging the body to lift",
+      "Shrugging the weight up with the traps",
+      "Going too heavy"
+    ]
+  },
+  {
+    "slug": "front-raise",
+    "name": "Dumbbell front raise",
+    "aliases": [
+      "front raises"
+    ],
+    "category": "push",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "front-delts"
+    ],
+    "secondary": [
+      "side-delts",
+      "chest"
+    ],
+    "demo": "Front_Two-Dumbbell_Raise",
+    "summary": "Raise dumbbells in front of you to shoulder height.",
+    "steps": [
+      "Stand with dumbbells in front of the thighs, palms facing you.",
+      "Raise them forward to shoulder height with a slight elbow bend.",
+      "Lower slowly."
+    ],
+    "cues": [
+      "No swinging",
+      "Stop at shoulder height"
+    ],
+    "mistakes": [
+      "Leaning back",
+      "Using momentum"
+    ]
+  },
+  {
+    "slug": "overhead-triceps-extension",
+    "name": "Overhead dumbbell triceps extension",
+    "aliases": [
+      "overhead extension",
+      "french press"
+    ],
+    "category": "arms",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "one dumbbell",
+    "primary": [
+      "triceps"
+    ],
+    "secondary": [],
+    "demo": "Standing_Dumbbell_Triceps_Extension",
+    "summary": "Hold one dumbbell overhead with both hands and bend only at the elbows.",
+    "steps": [
+      "Hold one dumbbell overhead with both hands under the top end.",
+      "Lower it behind your head by bending the elbows.",
+      "Extend back to straight arms."
+    ],
+    "cues": [
+      "Elbows point forward and stay close",
+      "Ribs down"
+    ],
+    "mistakes": [
+      "Elbows flaring wide",
+      "Arching the back"
+    ]
+  },
+  {
+    "slug": "triceps-kickback",
+    "name": "Dumbbell triceps kickback",
+    "aliases": [
+      "kickbacks"
+    ],
+    "category": "arms",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "triceps"
+    ],
+    "secondary": [],
+    "demo": "Tricep_Dumbbell_Kickback",
+    "summary": "Hinged forward with the upper arm fixed by your side, straighten the elbow behind you.",
+    "steps": [
+      "Hinge forward with a flat back, upper arm parallel to the floor.",
+      "Straighten the elbow to bring the dumbbell back.",
+      "Lower under control without moving the upper arm."
+    ],
+    "cues": [
+      "Upper arm stays still",
+      "Squeeze at full extension"
+    ],
+    "mistakes": [
+      "Swinging the dumbbell"
+    ]
+  },
+  {
+    "slug": "one-arm-dumbbell-row",
+    "name": "Bench-supported single-arm dumbbell row",
+    "aliases": [
+      "one arm row",
+      "single arm row",
+      "dumbbell row"
+    ],
+    "category": "pull",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "one dumbbell",
+    "per_side": true,
+    "primary": [
+      "lats",
+      "upper-back"
+    ],
+    "secondary": [
+      "rear-delts",
+      "biceps",
+      "forearms"
+    ],
+    "demo": "One-Arm_Dumbbell_Row",
+    "summary": "One hand (and usually the same-side knee) on a bench, row a dumbbell toward your hip with a flat, still back. The photos show the staggered-stance version; the knee-on-bench setup is the same pull.",
+    "steps": [
+      "Place one knee and the same-side hand on a flat bench; the other foot is on the floor, out to the side for a stable base.",
+      "Make your back flat and roughly parallel to the floor, neck in line, shoulders square to the floor.",
+      "Let the dumbbell hang straight down from the shoulder.",
+      "Pull the elbow up and back toward your hip, squeezing the shoulder blade toward the spine. Lower with control. Finish the set, then switch sides."
+    ],
+    "cues": [
+      "Flat back like a tabletop",
+      "Pull the elbow to the hip, not the hand to the chest",
+      "Shoulders stay square — don't twist",
+      "Supporting foot planted wide"
+    ],
+    "mistakes": [
+      "Rounding or twisting the back",
+      "Yanking with the arm or shrugging",
+      "Supporting leg too close for balance"
+    ]
+  },
+  {
+    "slug": "bent-over-dumbbell-row",
+    "name": "Bent-over dumbbell row",
+    "aliases": [
+      "two-arm dumbbell row"
+    ],
+    "category": "pull",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "lats",
+      "upper-back"
+    ],
+    "secondary": [
+      "rear-delts",
+      "biceps",
+      "lower-back",
+      "hamstrings"
+    ],
+    "demo": "Bent_Over_Two-Dumbbell_Row",
+    "summary": "Hinge forward and row both dumbbells toward your hips.",
+    "steps": [
+      "Hinge to about 45° with a flat back, dumbbells hanging.",
+      "Row both elbows back toward your hips.",
+      "Lower with control while holding the hinge."
+    ],
+    "cues": [
+      "Hold the hinge",
+      "Squeeze the shoulder blades"
+    ],
+    "mistakes": [
+      "Standing up as you row",
+      "Rounding the back"
+    ]
+  },
+  {
+    "slug": "reverse-fly",
+    "name": "Bent-over reverse fly",
+    "aliases": [
+      "rear delt fly",
+      "reverse flyes"
+    ],
+    "category": "pull",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "rear-delts",
+      "upper-back"
+    ],
+    "secondary": [
+      "traps"
+    ],
+    "demo": "Reverse_Flyes",
+    "summary": "Hinged forward, open the arms out to the sides to work the back of the shoulders.",
+    "steps": [
+      "Hinge forward with a flat back, light dumbbells hanging, elbows slightly bent.",
+      "Raise the arms out to the sides until level with the body.",
+      "Lower slowly."
+    ],
+    "cues": [
+      "Light weight, strict form",
+      "Think wide, not up"
+    ],
+    "mistakes": [
+      "Shrugging",
+      "Swinging"
+    ]
+  },
+  {
+    "slug": "dumbbell-pullover",
+    "name": "Dumbbell pullover",
+    "aliases": [
+      "pullover"
+    ],
+    "category": "pull",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "one dumbbell",
+    "primary": [
+      "lats",
+      "chest"
+    ],
+    "secondary": [
+      "triceps",
+      "abs"
+    ],
+    "demo": "Bent-Arm_Dumbbell_Pullover",
+    "summary": "Lying on a bench, lower one dumbbell in an arc behind your head and pull it back over the chest.",
+    "steps": [
+      "Lie on a bench holding one dumbbell over your chest with both hands.",
+      "With a slight elbow bend, lower it in an arc behind your head.",
+      "Pull it back over your chest."
+    ],
+    "cues": [
+      "Ribs down",
+      "Move only at the shoulders"
+    ],
+    "mistakes": [
+      "Arching the back at the bottom",
+      "Bending the elbows more to cheat"
+    ]
+  },
+  {
+    "slug": "dumbbell-shrug",
+    "name": "Dumbbell shrug",
+    "aliases": [
+      "shrugs"
+    ],
+    "category": "pull",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "traps"
+    ],
+    "secondary": [
+      "forearms"
+    ],
+    "demo": "Dumbbell_Shrug",
+    "summary": "Lift the shoulders straight up toward the ears, pause, and lower.",
+    "steps": [
+      "Stand with a dumbbell at each side.",
+      "Lift the shoulders straight up, pause.",
+      "Lower slowly."
+    ],
+    "cues": [
+      "Straight up and down — no rolling",
+      "Pause at the top"
+    ],
+    "mistakes": [
+      "Rolling the shoulders",
+      "Bending the elbows"
+    ]
+  },
+  {
+    "slug": "dumbbell-curl",
+    "name": "Dumbbell biceps curl",
+    "aliases": [
+      "bicep curl",
+      "curls",
+      "supinating curl"
+    ],
+    "category": "arms",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "biceps"
+    ],
+    "secondary": [
+      "forearms"
+    ],
+    "demo": "Dumbbell_Bicep_Curl",
+    "summary": "Curl the dumbbells up with the elbows fixed at your sides, turning the palms up as you lift.",
+    "steps": [
+      "Stand tall, dumbbells at your sides, palms facing in.",
+      "Keeping the elbows pinned to your sides, curl the weights up.",
+      "As you lift, turn the wrists so the palms face up (and slightly out) at the top.",
+      "Squeeze, then lower slowly to full extension."
+    ],
+    "cues": [
+      "Elbows stay by your sides",
+      "Turn the wrist as you curl",
+      "Slow on the way down"
+    ],
+    "mistakes": [
+      "Swinging the body",
+      "Elbows drifting forward",
+      "Cutting the bottom of the rep short"
+    ]
+  },
+  {
+    "slug": "hammer-curl",
+    "name": "Hammer curl",
+    "aliases": [
+      "neutral grip curl"
+    ],
+    "category": "arms",
+    "equipment": "dumbbell",
+    "mode": "weight_reps",
+    "load": "per dumbbell",
+    "primary": [
+      "biceps",
+      "forearms"
+    ],
+    "secondary": [],
+    "demo": "Hammer_Curls",
+    "summary": "A curl with palms facing each other throughout, which also works the forearm.",
+    "steps": [
+      "Stand with dumbbells at your sides, palms facing in.",
+      "Curl up keeping the palms facing in.",
+      "Lower slowly."
+    ],
+    "cues": [
+      "Thumbs up the whole time",
+      "Elbows fixed"
+    ],
+    "mistakes": [
+      "Swinging",
+      "Elbows moving forward"
+    ]
+  },
+  {
+    "slug": "crunch",
+    "name": "Abdominal crunch",
+    "aliases": [
+      "crunches",
+      "ab crunch"
+    ],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "abs"
+    ],
+    "secondary": [
+      "obliques"
+    ],
+    "demo": "Crunches",
+    "summary": "Curl the ribcage toward the pelvis, lifting just the shoulder blades from the floor.",
+    "steps": [
+      "Lie on your back, knees bent, feet flat. Hands lightly behind your head or crossed on the chest.",
+      "Breathe out and curl your ribs toward your hips, lifting the shoulder blades off the floor.",
+      "Pause, then lower slowly."
+    ],
+    "cues": [
+      "Exhale as you curl",
+      "Look at the ceiling — fist-sized gap under the chin",
+      "Small, controlled movement"
+    ],
+    "mistakes": [
+      "Pulling on the neck",
+      "Using momentum to sit up",
+      "Holding the breath"
+    ]
+  },
+  {
+    "slug": "reverse-crunch",
+    "name": "Reverse crunch",
+    "aliases": [],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "abs"
+    ],
+    "secondary": [
+      "hip-flexors"
+    ],
+    "demo": "Reverse_Crunch",
+    "summary": "Curl the pelvis up toward the ribs, bringing the knees toward the chest.",
+    "steps": [
+      "Lie on your back, knees bent at 90° above the hips.",
+      "Curl the hips off the floor toward the ribs.",
+      "Lower slowly."
+    ],
+    "cues": [
+      "Curl, don't swing",
+      "Low back gently into the floor"
+    ],
+    "mistakes": [
+      "Kicking the legs for momentum"
+    ]
+  },
+  {
+    "slug": "plank",
+    "name": "Plank",
+    "aliases": [
+      "forearm plank"
+    ],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "primary": [
+      "abs"
+    ],
+    "secondary": [
+      "obliques",
+      "front-delts",
+      "glutes"
+    ],
+    "demo": "Plank",
+    "summary": "Hold a straight line from head to heels on forearms and toes.",
+    "steps": [
+      "Forearms under shoulders, legs straight behind you.",
+      "Squeeze glutes and brace the core to form a straight line.",
+      "Hold, breathing steadily."
+    ],
+    "cues": [
+      "Squeeze the glutes",
+      "Push the floor away",
+      "Breathe"
+    ],
+    "mistakes": [
+      "Hips sagging",
+      "Hips piked high",
+      "Holding the breath"
+    ]
+  },
+  {
+    "slug": "side-plank",
+    "name": "Side plank",
+    "aliases": [
+      "side bridge"
+    ],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "per_side": true,
+    "primary": [
+      "obliques"
+    ],
+    "secondary": [
+      "abs",
+      "glutes",
+      "side-delts"
+    ],
+    "demo": "Side_Bridge",
+    "summary": "Support yourself on one forearm and the side of your feet, body in a straight line.",
+    "steps": [
+      "Lie on your side, elbow under shoulder.",
+      "Lift the hips so the body forms a straight line.",
+      "Hold, then switch sides. Bend the knees to make it easier."
+    ],
+    "cues": [
+      "Hips high",
+      "Stack the shoulders"
+    ],
+    "mistakes": [
+      "Hips dropping",
+      "Rolling forward"
+    ]
+  },
+  {
+    "slug": "dead-bug",
+    "name": "Dead bug",
+    "aliases": [],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "abs"
+    ],
+    "secondary": [
+      "hip-flexors",
+      "obliques"
+    ],
+    "demo": "Dead_Bug",
+    "summary": "On your back, slowly extend opposite arm and leg while keeping the low back flat.",
+    "steps": [
+      "Lie on your back, arms up, knees bent at 90° over the hips.",
+      "Lower the opposite arm and leg toward the floor while the low back stays down.",
+      "Return and alternate."
+    ],
+    "cues": [
+      "Low back glued to the floor",
+      "Exhale as you extend"
+    ],
+    "mistakes": [
+      "Arching the back",
+      "Moving too fast"
+    ]
+  },
+  {
+    "slug": "russian-twist",
+    "name": "Russian twist",
+    "aliases": [
+      "seated twist"
+    ],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "obliques"
+    ],
+    "secondary": [
+      "abs",
+      "hip-flexors"
+    ],
+    "demo": "Russian_Twist",
+    "summary": "Seated and leaning back, rotate the torso side to side.",
+    "steps": [
+      "Sit with knees bent, lean back to about 45° with a long spine.",
+      "Rotate the ribcage to one side, then the other.",
+      "Keep the feet down to make it easier."
+    ],
+    "cues": [
+      "Rotate from the ribs",
+      "Long spine"
+    ],
+    "mistakes": [
+      "Rounding the back",
+      "Only moving the arms"
+    ]
+  },
+  {
+    "slug": "mountain-climber",
+    "name": "Mountain climbers",
+    "aliases": [],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "time",
+    "primary": [
+      "abs",
+      "hip-flexors"
+    ],
+    "secondary": [
+      "quads",
+      "front-delts"
+    ],
+    "demo": "Mountain_Climbers",
+    "summary": "From a high plank, drive the knees toward the chest alternately.",
+    "steps": [
+      "Start in a high plank, hands under shoulders.",
+      "Drive one knee toward the chest, then switch quickly.",
+      "Keep the hips level."
+    ],
+    "cues": [
+      "Hips level",
+      "Shoulders over hands"
+    ],
+    "mistakes": [
+      "Hips bouncing high"
+    ]
+  },
+  {
+    "slug": "superman",
+    "name": "Superman",
+    "aliases": [
+      "back extension"
+    ],
+    "category": "core",
+    "equipment": "bodyweight",
+    "mode": "reps",
+    "primary": [
+      "lower-back"
+    ],
+    "secondary": [
+      "glutes",
+      "hamstrings",
+      "upper-back"
+    ],
+    "demo": "Superman",
+    "summary": "Lying face down, lift the arms, chest and legs a little off the floor.",
+    "steps": [
+      "Lie face down, arms overhead.",
+      "Lift arms, chest and legs slightly, squeezing the glutes.",
+      "Pause and lower."
+    ],
+    "cues": [
+      "Small lift, long body",
+      "Look at the floor"
+    ],
+    "mistakes": [
+      "Cranking the neck up",
+      "Over-arching"
+    ]
+  }
+]

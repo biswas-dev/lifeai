@@ -3,13 +3,15 @@ package api
 import (
 	"bytes"
 	"context"
-	"github.com/biswas-dev/lifeai/api/internal/integrations/hard75"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/biswas-dev/lifeai/api/internal/integrations/hard75"
 )
 
 func TestBloodSeriesKeepDifferentUnitsSeparate(t *testing.T) {
@@ -80,36 +82,35 @@ func TestMCPRejectsForeignOrigin(t *testing.T) {
 
 func TestMCPPhotoReadIsOwnerScoped(t *testing.T) {
 	s, h := newTestServer(t)
-	signup(t, h, "photo-owner@example.com")
-	signup(t, h, "photo-other@example.com")
-	var owner, other int64
-	s.db.QueryRow(`SELECT id FROM users WHERE email=?`, "photo-owner@example.com").Scan(&owner)
-	s.db.QueryRow(`SELECT id FROM users WHERE email=?`, "photo-other@example.com").Scan(&other)
+	owner := signup(t, h, "photo-owner@example.com")
+	other := signup(t, h, "photo-other@example.com")
+	var ownerID int64
+	s.db.QueryRow(`SELECT id FROM users WHERE email=?`, "photo-owner@example.com").Scan(&ownerID)
 	var buf bytes.Buffer
 	if err := jpeg.Encode(&buf, image.NewRGBA(image.Rect(0, 0, 20, 20)), nil); err != nil {
 		t.Fatal(err)
 	}
-	saved, err := s.photos.SaveBytes(buf.Bytes(), owner, "progress", 1<<20)
+	saved, err := s.photos.SaveBytes(buf.Bytes(), ownerID, "progress", 1<<20)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.ensureDay(context.Background(), owner, "2026-07-01"); err != nil {
+	if err := s.ensureDay(context.Background(), ownerID, "2026-07-01"); err != nil {
 		t.Fatal(err)
 	}
-	res, err := s.db.Exec(`INSERT INTO photos(user_id,on_date,kind,rel_path,thumb_path,mime,width,height,bytes,sha256) VALUES(?,?,'progress',?,?,?,?,?,?,?)`, owner, "2026-07-01", saved.RelPath, saved.ThumbPath, saved.Mime, saved.Width, saved.Height, saved.Bytes, saved.SHA256)
+	res, err := s.db.Exec(`INSERT INTO photos(user_id,on_date,kind,rel_path,thumb_path,mime,width,height,bytes,sha256) VALUES(?,?,'progress',?,?,?,?,?,?,?)`, ownerID, "2026-07-01", saved.RelPath, saved.ThumbPath, saved.Mime, saved.Width, saved.Height, saved.Bytes, saved.SHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
 	id, _ := res.LastInsertId()
-	tool := mcpToolByName["get_photo"]
-	if _, err := tool.run(context.Background(), s, other, map[string]any{"id": float64(id)}); err == nil {
+	call := func(c *client) map[string]any {
+		_, res := mcpCall(t, http.HandlerFunc(s.HandleMCP), c.token, fmt.Sprintf(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_photo","arguments":{"id":%d}}}`, id))
+		return res["result"].(map[string]any)
+	}
+	if res := call(other); res["isError"] != true {
 		t.Fatal("another user read a private photo")
 	}
-	result, err := tool.run(context.Background(), s, owner, map[string]any{"id": float64(id)})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if img, ok := result.(mcpImageContent); !ok || img.Type != "image" || img.Data == "" {
-		t.Fatal("missing image content")
+	img := call(owner)["content"].([]any)[0].(map[string]any)
+	if img["type"] != "image" || img["data"] == "" || img["mimeType"] != "image/jpeg" {
+		t.Fatalf("missing image content: %v", img)
 	}
 }

@@ -289,9 +289,18 @@ export function DayView({
                   <DumbbellIcon size={18} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium text-ink-100">
-                    {w.activity || w.kind}
-                  </div>
+                  {w.kind === "strength" || w.exercises?.length ? (
+                    <Link
+                      to={`/app/training/${w.id}`}
+                      className="block truncate font-medium text-ink-100 hover:text-vital-500"
+                    >
+                      {w.activity || w.kind} ›
+                    </Link>
+                  ) : (
+                    <div className="truncate font-medium text-ink-100">
+                      {w.activity || w.kind}
+                    </div>
+                  )}
                   <div className="text-xs text-ink-500">
                     {w.kind} · {minutes(w.minutes)}
                     {w.kcal ? ` · ${kcal(w.kcal)} kcal` : ""}
@@ -308,6 +317,11 @@ export function DayView({
                           .join(" + ")}`
                       : ""}
                   </div>
+                  {w.exercises && w.exercises.length > 0 && (
+                    <div className="mt-0.5 truncate text-xs text-ink-400">
+                      {w.exercises.map((e) => e.name).join(" · ")}
+                    </div>
+                  )}
                 </div>
                 <button
                   className="p-2 text-ink-600 hover:text-rose-400"

@@ -170,7 +170,8 @@ function GoalSettings() {
     ["steps", "Daily steps"],
     ["water_ml", "Water (ml)"],
     ["sleep_hours", "Sleep (hours)"],
-    ["workout_minutes", "Training (minutes)"],
+    ["workout_minutes", "Exercise per day (minutes)"],
+    ["weekly_workout_minutes", "Exercise per week (minutes)"],
     ["meditation_minutes", "Meditation (minutes)"],
   ] as const;
   return (
@@ -397,6 +398,11 @@ function HealthImports() {
               ? "Connect your Strava account to import activities automatically."
               : "A Strava application must be configured on this server before you can connect."}
         </p>
+        {strava.data?.connected && strava.data.can_upload === false && (
+          <p className="mt-2 rounded-xl bg-ember-500/10 px-3 py-2 text-xs text-ember-400">
+            Reconnect Strava to post strength sessions from Training. Strava asks you to allow uploads; imports keep working either way.
+          </p>
+        )}
         <ErrorText>{strava.data?.last_error}</ErrorText>
         <div className="mt-3 flex gap-2">
           {strava.data?.connected ? (
@@ -414,6 +420,20 @@ function HealthImports() {
               >
                 Sync now
               </button>
+              {strava.data.can_upload === false && (
+                <button
+                  className="btn-ghost"
+                  disabled={a.busy}
+                  onClick={() =>
+                    void a.run(async () => {
+                      const { url } = await api.stravaConnect();
+                      window.location.assign(url);
+                    }, "")
+                  }
+                >
+                  Reconnect
+                </button>
+              )}
               <button
                 className="btn-danger"
                 disabled={a.busy}

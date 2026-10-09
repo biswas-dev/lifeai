@@ -90,3 +90,13 @@ func DaysBetween(from, to string) int {
 	}
 	return int(b.Sub(a).Hours() / 24)
 }
+
+// LocalNoon is midday on a calendar date in loc, a neutral start time for a
+// session logged without one.
+func LocalNoon(date string, loc *time.Location) time.Time {
+	t, err := time.ParseInLocation(Layout, date, loc)
+	if err != nil {
+		return time.Now().In(loc)
+	}
+	return t.Add(12 * time.Hour)
+}

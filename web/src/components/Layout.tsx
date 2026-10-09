@@ -4,6 +4,8 @@ import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../state/AuthContext";
 import {
   BookIcon,
+  BowlIcon,
+  DumbbellIcon,
   CalendarIcon,
   ChartIcon,
   DropIcon,
@@ -17,6 +19,8 @@ import {
 
 const tabs = [
   { to: "/app", label: "Today", icon: HomeIcon, end: true },
+  { to: "/app/training", label: "Training", icon: DumbbellIcon },
+  { to: "/app/nutrition", label: "Nutrition plan", icon: BowlIcon },
   { to: "/app/history", label: "Calendar", icon: CalendarIcon },
   { to: "/app/recipes", label: "Recipes", icon: BookIcon },
   { to: "/app/trends", label: "Trends", icon: ChartIcon },
@@ -29,15 +33,16 @@ const tabs = [
 const phoneTabs = [
   tabs[0],
   tabs[1],
-  { ...tabs[5], label: "Photos" },
-  { ...tabs[7], label: "Insights" },
+  { ...tabs[2], label: "Plan" },
+  tabs[3],
 ];
 export function Layout() {
   const { user, logout } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const current =
-    tabs.find((t) => t.to === location.pathname)?.label || "Your record";
+    tabs.find((t) => t.to === location.pathname)?.label ||
+    (location.pathname.startsWith("/app/training/") ? "Session" : "Your record");
   return (
     <div className="app-shell flex min-h-dvh w-full">
       <aside className="sticky top-0 hidden h-dvh w-[232px] shrink-0 flex-col border-r border-ink-800 bg-white px-4 py-6 md:flex">
@@ -147,7 +152,7 @@ export function Layout() {
             onClick={() => setMoreOpen(true)}
             aria-label="More navigation"
             aria-expanded={moreOpen}
-            className={`flex flex-1 flex-col items-center gap-1 py-3 text-[10px] ${!phoneTabs.some((t) => t.to === location.pathname) && !location.pathname.startsWith("/app/day/") ? "font-semibold text-vital-500" : "text-ink-500"}`}
+            className={`flex flex-1 flex-col items-center gap-1 py-3 text-[10px] ${!phoneTabs.some((t) => t.to === location.pathname) && !location.pathname.startsWith("/app/day/") && !location.pathname.startsWith("/app/training/") ? "font-semibold text-vital-500" : "text-ink-500"}`}
           >
             <UserIcon size={19} />
             More

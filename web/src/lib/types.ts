@@ -67,6 +67,7 @@ export interface Goals {
   water_ml: number | null;
   sleep_hours: number | null;
   workout_minutes: number | null;
+  weekly_workout_minutes: number | null;
   meditation_minutes: number | null;
   quick_water_ml: number | null;
   quick_workout_minutes: number | null;
@@ -130,6 +131,7 @@ export interface Meal {
   items: MealItem[];
   estimate_status: "" | "pending" | "done" | "failed";
   estimate_error?: string;
+  plan_key?: string;
 }
 
 export interface Workout {
@@ -145,6 +147,170 @@ export interface Workout {
   started_at: string | null;
   source: string;
   sources?: string[];
+  exercises?: WorkoutExercise[];
+  strava_id?: string;
+}
+
+export type WeightUnit = "lb" | "kg";
+
+export interface WorkoutSet {
+  reps: number | null;
+  weight: number | null;
+  unit: WeightUnit;
+  seconds: number | null;
+}
+
+export interface WorkoutExercise {
+  id?: number;
+  slug: string;
+  name: string;
+  notes: string;
+  sets: WorkoutSet[];
+}
+
+export type ExerciseCategory =
+  | "warmup"
+  | "legs"
+  | "push"
+  | "pull"
+  | "arms"
+  | "core";
+
+export type Muscle =
+  | "chest"
+  | "front-delts"
+  | "side-delts"
+  | "rear-delts"
+  | "biceps"
+  | "triceps"
+  | "forearms"
+  | "abs"
+  | "obliques"
+  | "lats"
+  | "upper-back"
+  | "traps"
+  | "lower-back"
+  | "glutes"
+  | "hip-flexors"
+  | "quads"
+  | "adductors"
+  | "hamstrings"
+  | "calves";
+
+export interface Exercise {
+  slug: string;
+  name: string;
+  aliases: string[];
+  category: ExerciseCategory;
+  equipment: "bodyweight" | "dumbbell";
+  mode: "weight_reps" | "reps" | "time";
+  per_side?: boolean;
+  load?: string;
+  primary: Muscle[];
+  secondary: Muscle[];
+  images: string[];
+  summary: string;
+  steps: string[];
+  cues: string[];
+  mistakes: string[];
+}
+
+export interface ExerciseCatalog {
+  categories: ExerciseCategory[];
+  muscles: Muscle[];
+  exercises: Exercise[];
+}
+
+export interface ExerciseHistory {
+  workout_id: number;
+  date: string;
+  name: string;
+  notes: string;
+  sets: WorkoutSet[];
+}
+
+export interface WeekTraining {
+  from: string;
+  to: string;
+  minutes: number;
+  goal: number | null;
+  sessions: number;
+  days: { date: string; minutes: number }[];
+  planned?: PlannedSession[];
+  scheduled_left?: number;
+  freeform_needed?: number;
+}
+
+export interface ScheduleSlot {
+  key: string;
+  title: string;
+  kind: string;
+  days: number[];
+  start: string;
+  end: string;
+}
+
+export interface TrainingSchedule {
+  fixed: ScheduleSlot[];
+  notes?: string;
+  updated_at?: string;
+}
+
+export interface PlannedSession {
+  date: string;
+  key: string;
+  title: string;
+  kind: string;
+  start: string;
+  end: string;
+  minutes: number;
+  status: "done" | "today" | "upcoming" | "missed";
+  workout_id: number | null;
+}
+
+export interface StravaUpload {
+  strava_id: string;
+  url: string;
+  created: boolean;
+  workout: Workout;
+}
+
+export interface PlanOption {
+  key: string;
+  title: string;
+  items: string[];
+  kcal: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  days?: number[];
+}
+
+export interface PlanMeal {
+  key: string;
+  time: string;
+  end_time?: string;
+  title: string;
+  slot: Slot;
+  options: PlanOption[];
+}
+
+export interface NutritionPlan {
+  name: string;
+  source?: string;
+  window_start?: string;
+  window_end?: string;
+  targets: {
+    kcal?: number;
+    kcal_max?: number;
+    protein_g?: number;
+    protein_g_max?: number;
+    carbs_g?: number;
+    fat_g?: number;
+  };
+  meals: PlanMeal[];
+  notes?: string[];
+  updated_at?: string;
 }
 
 export interface Meditation {
@@ -197,6 +363,7 @@ export interface Day {
   photos: Photo[];
   totals: Totals;
   goals: Goals;
+  week?: WeekTraining;
 }
 
 export interface DaySummary {
@@ -485,6 +652,7 @@ export interface StravaStatus {
   last_sync_at: string | null;
   last_error: string;
   imported: number;
+  can_upload?: boolean;
 }
 export interface ImportSummary {
   source: string;
