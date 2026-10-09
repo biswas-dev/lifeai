@@ -110,7 +110,7 @@ function Library({ onOpen }: { onOpen: (e: Exercise) => void }) {
       </div>
     );
   return (
-    <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
       <div className="card p-4">
         <p className="mb-2 text-xs text-ink-500">Tap a muscle to see what trains it.</p>
         <MuscleMap primary={[]} selected={muscle} onSelect={(m) => setMuscle(muscle === m ? "" : m)} className="mx-auto w-full max-w-[260px]" />
@@ -175,7 +175,7 @@ export function Training() {
       {tab === "library" ? (
         <Library onOpen={setGuide} />
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
           <section className="card order-2 p-4 lg:order-1">
             <h2 className="mb-1 text-sm font-semibold">Recent sessions</h2>
             <ErrorText>{sessions.error}</ErrorText>

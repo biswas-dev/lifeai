@@ -270,8 +270,8 @@ export function Nutrition() {
       />
       <ErrorText>{error}</ErrorText>
       {notice && <p className="mb-3 rounded-xl bg-vital-500/10 px-3 py-2 text-sm text-vital-500" role="status">{notice}</p>}
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="space-y-5">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-5">
           {day ? <PlanToday day={day} plan={plan} onChanged={() => void loadDay()} showLink={false} /> : <Spinner />}
           <section className="card overflow-x-auto p-4">
             <h2 className="mb-3 text-sm font-semibold">The week</h2>

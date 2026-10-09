@@ -71,7 +71,7 @@ export function ExerciseFilters({
           ))}
         </select>
       </div>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Category">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Category">
         <button type="button" className={`chip shrink-0 ${category === "" ? "chip-active" : ""}`} aria-pressed={category === ""} onClick={() => setCategory("")}>
           All
         </button>

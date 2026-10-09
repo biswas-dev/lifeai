@@ -67,6 +67,8 @@ export function PlanToday({ day, plan, onChanged, showLink = true }: { day: Day;
   }
 
   const loggedCount = plan.meals.filter((m) => loggedFor(day.meals, m)).length;
+  // Only the next meal to eat shows its portions; the rest fold away.
+  const nextKey = plan.meals.find((m) => !loggedFor(day.meals, m))?.key;
   return (
     <section className="card overflow-hidden">
       <div className="flex items-center justify-between border-b border-ink-800 p-4">
@@ -118,11 +120,24 @@ export function PlanToday({ day, plan, onChanged, showLink = true }: { day: Day;
                       ))}
                     </select>
                   )}
-                  <ul className="mt-2 space-y-0.5 text-xs leading-relaxed text-ink-400">
-                    {o.items.map((it) => (
-                      <li key={it}>· {it}</li>
-                    ))}
-                  </ul>
+                  {m.key === nextKey ? (
+                    <ul className="mt-2 space-y-0.5 text-xs leading-relaxed text-ink-400">
+                      {o.items.map((it) => (
+                        <li key={it}>· {it}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    o.items.length > 0 && (
+                      <details className="mt-1.5 text-xs text-ink-400">
+                        <summary className="cursor-pointer py-1 text-ink-500">Show portions</summary>
+                        <ul className="space-y-0.5 leading-relaxed">
+                          {o.items.map((it) => (
+                            <li key={it}>· {it}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    )
+                  )}
                   <p className="mt-1.5 text-[11px] text-ink-500">
                     ~{Math.round(o.kcal)} kcal · {Math.round(o.protein_g)} g protein · {Math.round(o.carbs_g)} g carbs · {Math.round(o.fat_g)} g fat
                   </p>

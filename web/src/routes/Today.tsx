@@ -66,6 +66,33 @@ export function Today() {
     summary.data?.blood.watch.filter((m) =>
       ["hba1c", "ldl", "alt"].includes(m.code),
     ) || [];
+  const planCards = (
+    <>
+      {plan.data?.plan && (
+        <PlanToday
+          day={dash.today}
+          plan={plan.data.plan}
+          onChanged={() => void load()}
+        />
+      )}
+      {dash.today.week && (
+        <section className="card p-5">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <DumbbellIcon size={17} />
+            <h2>Movement this week</h2>
+          </div>
+          <WeekProgress week={dash.today.week} compact />
+          <WeekPlan week={dash.today.week} limit={2} />
+          <Link
+            to="/app/training"
+            className="mt-4 block text-xs font-medium text-vital-500"
+          >
+            {dash.today.week.goal ? "Open training" : "Set a weekly goal in Training"} →
+          </Link>
+        </section>
+      )}
+    </>
+  );
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3 md:mb-7 md:gap-4">
@@ -120,32 +147,13 @@ export function Today() {
               );
             })}
           </div>
+          {/* On phones and tablets the plan and the week come first; the
+              sidebar holds them on wide screens. */}
+          <div className="mb-5 space-y-5 xl:hidden">{planCards}</div>
           <DayView day={dash.today} reload={load} />
         </div>
         <aside className="space-y-5">
-          {plan.data?.plan && (
-            <PlanToday
-              day={dash.today}
-              plan={plan.data.plan}
-              onChanged={() => void load()}
-            />
-          )}
-          {dash.today.week && (
-            <section className="card p-5">
-              <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <DumbbellIcon size={17} />
-                <h2>Movement this week</h2>
-              </div>
-              <WeekProgress week={dash.today.week} compact />
-              <WeekPlan week={dash.today.week} limit={2} />
-              <Link
-                to="/app/training"
-                className="mt-4 block text-xs font-medium text-vital-500"
-              >
-                {dash.today.week.goal ? "Open training" : "Set a weekly goal in Training"} →
-              </Link>
-            </section>
-          )}
+          <div className="hidden space-y-5 xl:block">{planCards}</div>
           <section className="card overflow-hidden">
             <div className="flex items-center gap-2 border-b border-ink-800 p-5 text-sm font-semibold">
               <DropIcon size={17} />
