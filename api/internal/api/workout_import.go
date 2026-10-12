@@ -39,6 +39,58 @@ func normalizedActivity(activity string) string {
 	return strings.Join(strings.Fields(strings.ToLower(activity)), " ")
 }
 
+// genericWorkoutTitle reports a provider's default title for an untyped
+// session, e.g. Strava's "Morning Workout", which says nothing about the
+// activity beyond the time of day.
+func genericWorkoutTitle(activity string) bool {
+	a := normalizedActivity(activity)
+	for _, prefix := range []string{"morning ", "lunch ", "afternoon ", "evening ", "night "} {
+		a = strings.TrimPrefix(a, prefix)
+	}
+	switch a {
+	case "workout", "weight training", "strength training":
+		return true
+	}
+	return false
+}
+
+// strengthAndGeneric pairs a strength session with an imported session that
+// carries only a generic title, which is how a recorded gym session arrives
+// from Strava through 75hard.
+func strengthAndGeneric(a, b importedWorkout) bool {
+	generic := func(w importedWorkout) bool {
+		return (w.Kind == "other" || w.Kind == "cardio") && genericWorkoutTitle(w.Activity)
+	}
+	return (a.Kind == "strength" && generic(b)) || (b.Kind == "strength" && generic(a))
+}
+
+// overlappingSession allows a person's own entry, whose start and length are
+// often the scheduled slot rather than measured, to match a recording that
+// starts within 15 minutes and covers at least half of the shorter session.
+func overlappingSession(a, b importedWorkout) bool {
+	if (a.Source == "manual") == (b.Source == "manual") || a.Minutes <= 0 || b.Minutes <= 0 {
+		return false
+	}
+	delta := a.StartedAt.Sub(b.StartedAt)
+	if delta < 0 {
+		delta = -delta
+	}
+	if delta > 15*time.Minute {
+		return false
+	}
+	aEnd := a.StartedAt.Add(time.Duration(a.Minutes) * time.Minute)
+	bEnd := b.StartedAt.Add(time.Duration(b.Minutes) * time.Minute)
+	start, end := a.StartedAt, aEnd
+	if b.StartedAt.After(start) {
+		start = b.StartedAt
+	}
+	if bEnd.Before(end) {
+		end = bEnd
+	}
+	shorter := min(a.Minutes, b.Minutes)
+	return end.Sub(start) >= time.Duration(shorter)*time.Minute/2
+}
+
 func sameImportedWorkout(a, b importedWorkout) bool {
 	if a.StartedAt.IsZero() || b.StartedAt.IsZero() {
 		return false
@@ -59,11 +111,12 @@ func sameImportedWorkout(a, b importedWorkout) bool {
 	// A custom Strava title such as "Lunch break" makes 75hard's generic
 	// outdoor type map to cardio even when Strava knows it was a walk.
 	kindMatches := (a.Kind == b.Kind && a.Kind != "other") || ((a.Kind == "other" || b.Kind == "other") && nameMatches) ||
-		(fromStrava && nameMatches && ((a.Source == "75hard" && a.Kind == "cardio") || (b.Source == "75hard" && b.Kind == "cardio")))
+		(fromStrava && nameMatches && ((a.Source == "75hard" && a.Kind == "cardio") || (b.Source == "75hard" && b.Kind == "cardio"))) ||
+		strengthAndGeneric(a, b)
 	if !kindMatches {
 		return false
 	}
-	if health.SameWorkout(a.StartedAt, a.Minutes, b.StartedAt, b.Minutes) {
+	if health.SameWorkout(a.StartedAt, a.Minutes, b.StartedAt, b.Minutes) || overlappingSession(a, b) {
 		return true
 	}
 	// 75hard sometimes credits elapsed time where Strava reports moving
@@ -225,9 +278,9 @@ func (s *Server) importWorkout(ctx context.Context, userID int64, wk health.Work
 		candidate := matches[0]
 		keepID = candidate.ID
 		if currentID != 0 {
-			keepID, removeID = currentID, candidate.ID
-			if candidate.ID < currentID {
-				keepID, removeID = candidate.ID, currentID
+			keepID, removeID, err = keptWorkout(ctx, tx, currentID, candidate.ID)
+			if err != nil {
+				return false, err
 			}
 		}
 		current = combineWorkout(current, candidate)
@@ -267,4 +320,30 @@ func (s *Server) importWorkout(ctx context.Context, userID int64, wk health.Work
 		}
 	}
 	return inserted, tx.Commit()
+}
+
+// keptWorkout picks which of two rows for one session survives a merge: the
+// one holding logged exercises, then a person's own entry, then the older row.
+// Exercises belong to their row, so keeping the other would delete them.
+func keptWorkout(ctx context.Context, tx *sql.Tx, a, b int64) (keep, remove int64, err error) {
+	score := func(id int64) (int, error) {
+		var exercises, manual int
+		err := tx.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM workout_exercises WHERE workout_id=workouts.id), source='manual' FROM workouts WHERE id=?`, id).Scan(&exercises, &manual)
+		if exercises > 0 {
+			return 2, err
+		}
+		return manual, err
+	}
+	sa, err := score(a)
+	if err != nil {
+		return 0, 0, err
+	}
+	sb, err := score(b)
+	if err != nil {
+		return 0, 0, err
+	}
+	if sb > sa || (sb == sa && b < a) {
+		return b, a, nil
+	}
+	return a, b, nil
 }

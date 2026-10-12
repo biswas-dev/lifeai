@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
-import type { Day, Meal } from "../lib/types";
+import type { Day, Meal, Workout } from "../lib/types";
 import { grams, kcal, minutes, weightDisplay } from "../lib/format";
 import { useAuth } from "../state/AuthContext";
 import { Bar, Empty, ErrorText } from "./ui";
@@ -22,6 +22,7 @@ import {
 } from "./sheets";
 import { PhotoUpload } from "./PhotoUpload";
 import { ActivityGrid } from "./ActivityGrid";
+import { SupplementsCard } from "./Supplements";
 import { waterDisplay } from "../lib/water";
 
 /** The day as a page: totals against goals, then everything logged. */
@@ -63,6 +64,18 @@ export function DayView({
     }
   }
 
+  async function link(keep: Workout, other: Workout) {
+    setError("");
+    try {
+      // A logged session keeps its exercises and takes the recording's
+      // measured start and length.
+      await api.mergeWorkouts(keep.id, other.id, keep.source === "manual" && other.source !== "manual");
+      reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not link the sessions");
+    }
+  }
+
   return (
     <div className="space-y-5">
       <ErrorText>{error}</ErrorText>
@@ -74,6 +87,7 @@ export function DayView({
           setSheet(kind);
         }}
       />
+      <SupplementsCard day={day} onChanged={reload} />
       <section className="card p-5">
         <h2 className="mb-5 text-sm font-semibold">Today’s nutrition</h2>
         <div className="mb-3 flex items-baseline justify-between">
@@ -284,7 +298,7 @@ export function DayView({
         ) : (
           <div className="space-y-2">
             {day.workouts.map((w) => (
-              <div key={w.id} className="card flex items-center gap-3 p-3">
+              <div key={w.id} className="card flex flex-wrap items-center gap-3 p-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-vital-500/10 text-vital-400">
                   <DumbbellIcon size={18} />
                 </span>
@@ -330,6 +344,14 @@ export function DayView({
                 >
                   <TrashIcon size={16} />
                 </button>
+                {linkTarget(w, day.workouts) && (
+                  <button
+                    className="btn-ghost btn-sm basis-full text-xs"
+                    onClick={() => void link(linkTarget(w, day.workouts)!, w)}
+                  >
+                    Same session as “{linkTarget(w, day.workouts)!.activity}”? Link them
+                  </button>
+                )}
               </div>
             ))}
             {day.meditations.map((s) => (
@@ -521,4 +543,23 @@ function Cell({
       </div>
     </div>
   );
+}
+
+/**
+ * An imported recording (Strava, 75hard, …) without exercises that starts
+ * within 30 minutes of a session logged here is probably the same one; the
+ * logged session is the one to keep.
+ */
+export function linkTarget(w: Workout, all: Workout[]): Workout | null {
+  const imported = (x: Workout) => (x.sources || [x.source]).some((s) => s !== "manual");
+  if (!imported(w) || w.exercises?.length || !w.started_at) return null;
+  const start = Date.parse(w.started_at);
+  const near = all.filter(
+    (o) =>
+      o.id !== w.id &&
+      o.started_at &&
+      !imported(o) &&
+      Math.abs(Date.parse(o.started_at) - start) <= 30 * 60_000,
+  );
+  return near.length === 1 ? near[0] : null;
 }

@@ -161,3 +161,9 @@ export const BowlIcon = (p: P) => (
     <path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5" />
   </svg>
 );
+export const PillIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m10.5 20.5-7-7a4.95 4.95 0 0 1 7-7l7 7a4.95 4.95 0 0 1-7 7Z" />
+    <path d="m7 10 7 7" />
+  </svg>
+);

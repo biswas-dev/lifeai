@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -356,7 +357,7 @@ func (s *Server) registerMCPTools(srv *gomcp.Server) {
 			return saved, asError(err)
 		})
 
-	gomcp.Register(srv, gomcp.Tool{Name: "get_day", Description: "Everything logged on one date: body metrics, meals with items, workouts with exercises and sets, meditation, journal, photos, totals against goals, and the week's exercise minutes."},
+	gomcp.Register(srv, gomcp.Tool{Name: "get_day", Description: "Everything logged on one date: body metrics, meals with items, workouts with exercises and sets, supplements taken, meditation, journal, photos, totals against goals, and the week's exercise minutes."},
 		func(ctx context.Context, in dateInput) (Day, error) {
 			d, err := s.mcpDate(ctx, in.Date)
 			if err != nil {
@@ -450,12 +451,13 @@ func (s *Server) registerMCPTools(srv *gomcp.Server) {
 
 	gomcp.Register(srv, gomcp.Tool{Name: "log_workout", Description: "Log a training session. For strength work include exercises with their sets (catalog slugs from list_exercises; a recognised name is matched automatically).", Write: true},
 		func(ctx context.Context, in workoutToolInput) (Workout, error) {
-			wk, err := s.saveWorkout(ctx, uid(ctx), 0, in.toInput())
+			wk, err := s.createWorkout(ctx, uid(ctx), in.toInput())
 			return wk, asError(err)
 		})
 
 	gomcp.Register(srv, gomcp.Tool{Name: "backfill_session", Description: "Fill in a training session after the fact, e.g. from a recording or transcript of a trainer session. " +
 		"Updates the session already logged that day for the fixed slot (or of its kind), otherwise creates it with the slot's time and length. " +
+		"A recording of the session already imported from Strava (e.g. \"Morning Workout\") is linked into it, and its measured start and length are used unless you give times. " +
 		"Match each movement to a catalog slug (list_exercises), keep the order performed, give weights in the unit used (lb by default; per dumbbell unless the exercise's load says one dumbbell), " +
 		"and put anything uncertain in the exercise notes rather than guessing numbers.", Write: true, Idempotent: true},
 		func(ctx context.Context, in BackfillInput) (BackfillResult, error) {
@@ -479,6 +481,17 @@ func (s *Server) registerMCPTools(srv *gomcp.Server) {
 				return nil, errors.New("workout not found")
 			}
 			return map[string]any{"deleted": in.ID}, nil
+		})
+
+	gomcp.Register(srv, gomcp.Tool{Name: "merge_workouts", Description: "Link two entries for one session, e.g. a logged trainer session and its Strava recording. " +
+		"The kept session holds the exercises and gains the other's source links, so later syncs update it instead of re-adding the copy; the other entry is removed. " +
+		"Set use_timing to take the merged entry's start and length.", Write: true, Destructive: true},
+		func(ctx context.Context, in mergeWorkoutsToolInput) (Workout, error) {
+			wk, err := s.mergeWorkouts(ctx, uid(ctx), in.KeepID, in.MergeID, in.UseTiming)
+			if errors.Is(err, sql.ErrNoRows) {
+				return wk, errors.New("workout not found")
+			}
+			return wk, asError(err)
 		})
 
 	gomcp.Register(srv, gomcp.Tool{Name: "get_workout", Description: "One session with its exercises and sets."},
@@ -571,6 +584,52 @@ func (s *Server) registerMCPTools(srv *gomcp.Server) {
 		func(ctx context.Context, in NutritionPlan) (map[string]any, error) {
 			p, err := s.saveNutritionPlan(ctx, uid(ctx), in)
 			return map[string]any{"plan": p}, asError(err)
+		})
+
+	gomcp.Register(srv, gomcp.Tool{Name: "list_supplements", Description: "Supplements with the exact product, dose and how they are usually taken; for a date, whether each was taken, the streak, and the days missed since starting."},
+		func(ctx context.Context, in dateInput) (map[string]any, error) {
+			d, err := s.mcpDate(ctx, in.Date)
+			if err != nil {
+				return nil, err
+			}
+			out, err := s.supplementDays(ctx, uid(ctx), d)
+			return map[string]any{"date": d, "supplements": out}, err
+		})
+
+	gomcp.Register(srv, gomcp.Tool{Name: "save_supplement", Description: "Add a supplement, or change one by id (only the fields given). Record the exact product; ask the person when it is not known.", Write: true},
+		func(ctx context.Context, in saveSupplementToolInput) (Supplement, error) {
+			sp, err := s.saveSupplement(ctx, uid(ctx), in.ID, in.supplementInput)
+			if errors.Is(err, sql.ErrNoRows) {
+				return sp, errors.New("supplement not found")
+			}
+			return sp, asError(err)
+		})
+
+	gomcp.Register(srv, gomcp.Tool{Name: "log_supplement", Description: "Mark a supplement taken on a date (default today), or set taken=false to clear it. taken_with defaults to the supplement's usual, e.g. cold water.", Write: true, Idempotent: true},
+		func(ctx context.Context, in logSupplementToolInput) (map[string]any, error) {
+			d, err := s.mcpDate(ctx, in.Date)
+			if err != nil {
+				return nil, err
+			}
+			sp, err := s.resolveSupplement(ctx, uid(ctx), in.ID, in.Name)
+			if err != nil {
+				return nil, asError(err)
+			}
+			if in.Taken != nil && !*in.Taken {
+				return map[string]any{"supplement": sp.Name, "date": d, "taken": false}, s.untakeSupplement(ctx, uid(ctx), sp.ID, d)
+			}
+			l, err := s.takeSupplement(ctx, uid(ctx), sp, d, in.TakenWith, in.Notes)
+			return map[string]any{"supplement": sp.Name, "date": d, "taken": true, "log": l}, asError(err)
+		})
+
+	gomcp.Register(srv, gomcp.Tool{Name: "backfill_supplement", Description: "Mark every day from..to as taken (default: from the supplement's start to today), except the skipped days, which are cleared.", Write: true, Idempotent: true},
+		func(ctx context.Context, in backfillSupplementToolInput) (map[string]any, error) {
+			sp, err := s.resolveSupplement(ctx, uid(ctx), in.ID, in.Name)
+			if err != nil {
+				return nil, asError(err)
+			}
+			out, err := s.backfillSupplement(ctx, uid(ctx), sp, in.SupplementBackfill)
+			return out, asError(err)
 		})
 
 	gomcp.Register(srv, gomcp.Tool{Name: "log_meditation", Description: "Log a meditation sitting.", Write: true},

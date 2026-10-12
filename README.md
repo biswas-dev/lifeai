@@ -63,7 +63,13 @@ A weekly schedule fixes the sessions that happen at set times, e.g. strength wit
 
 Sessions can be filled in afterwards: `POST /api/training/backfill`, or the `backfill_session` MCP tool, takes a date and the exercises with their sets — for example, read from a transcript of a recorded trainer session. It updates the session already logged for that day's fixed slot, or creates it with the slot's time and length.
 
+Logged and recorded sessions are linked. A gym session recorded on Strava often arrives (directly or through 75hard) with a generic title such as "Morning Workout" and a slightly different start and length from the scheduled slot. An untyped recording with a generic workout title matches a strength session, and a person's own entry matches a recording that starts within 15 minutes and overlaps at least half of the shorter session. The logged session always survives a merge with its exercises; the recording's source IDs move onto it, so later syncs update it instead of re-adding the copy. Backfilling a session links an already-imported recording and takes its measured start and length unless times are given. Any two entries can also be linked by hand: Today suggests "Same session as …? Link them" for a nearby recording, and `POST /api/workouts/{id}/merge` or the `merge_workouts` MCP tool links any pair.
+
 A saved session can be posted to Strava as a manual Weight Training activity, with the exercises as its description; posting again updates it. This needs the `activity:write` permission, so connections made before it was requested must reconnect once in Settings. Later imports recognise the uploaded activity and keep one session.
+
+## Supplements
+
+Supplements record the exact product, dose, how they are usually taken (e.g. cold water), where they are bought, a start date and an optional product photo. Today and each day page list them with one-tap "Take" buttons; a taken supplement shows quick chips to change what it was taken with. Each shows its streak, days taken since starting, and recently missed days. Stopping a supplement hides it from new days but keeps its history. `POST /api/supplements/{id}/backfill` and the `backfill_supplement` MCP tool mark a range of days taken except skipped days; `log_supplement`, `list_supplements` and `save_supplement` cover daily use. Photos are stored with the supplement (JPEG, PNG or WebP under 2 MB) and served only to their owner.
 
 ## Nutrition plan
 

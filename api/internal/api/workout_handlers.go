@@ -274,7 +274,7 @@ func (s *Server) HandleCreateWorkout(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &req) {
 		return
 	}
-	wk, err := s.saveWorkout(r.Context(), UserID(r.Context()), 0, req)
+	wk, err := s.createWorkout(r.Context(), UserID(r.Context()), req)
 	if err != nil {
 		respondSaveError(w, err, "workout")
 		return

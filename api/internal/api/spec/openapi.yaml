@@ -392,6 +392,23 @@ paths:
         - { name: workoutID, in: path, required: true, schema: { type: integer } }
       responses:
         '200': { description: 'OK: {strava_id, url, created, workout}' }
+  /workouts/{workoutID}/merge:
+    post:
+      summary: Link another entry for the same session into this one
+      description: For example a logged trainer session and its Strava recording. Source links, missing calories/distance/heart rate, notes and (when this one has none) exercises move here; the other entry is removed, and later syncs update this one. use_timing takes the other entry's start and length.
+      parameters:
+        - { name: workoutID, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merge_id]
+              properties:
+                merge_id: { type: integer }
+                use_timing: { type: boolean }
+      responses:
+        '200': { description: 'OK: the kept workout' }
   /exercises:
     get:
       summary: The exercise catalog with muscles, form steps, cues and demo images
@@ -460,6 +477,97 @@ paths:
       summary: Replace the nutrition plan
       responses:
         '200': { description: OK }
+  /supplements:
+    get:
+      summary: Supplements; with date, each one's log, streak and missed days for that date
+      parameters:
+        - { name: date, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Add a supplement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                product: { type: string, description: 'Exact product, e.g. brand, flavour and size' }
+                dose: { type: string }
+                taken_with: { type: string, description: 'Usual way it is taken, e.g. cold water; default for each log' }
+                product_url: { type: string }
+                notes: { type: string }
+                started_on: { type: string, format: date }
+                active: { type: boolean }
+                position: { type: integer }
+      responses:
+        '201': { description: Created }
+  /supplements/{supplementID}:
+    patch:
+      summary: Change the given fields of a supplement
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Remove a supplement and its history
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /supplements/{supplementID}/image:
+    get:
+      summary: The product photo
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: The image }
+    put:
+      summary: Store a product photo (raw JPEG, PNG or WebP body, under 2 MB)
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: 'OK: the supplement with image_url' }
+    delete:
+      summary: Remove the product photo
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+  /supplements/{supplementID}/days/{date}:
+    put:
+      summary: Mark taken on a date; optional body {taken_with, notes}
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+        - { name: date, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Clear a date
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+        - { name: date, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK }
+  /supplements/{supplementID}/backfill:
+    post:
+      summary: Mark every day from..to taken, except skipped days (which are cleared)
+      parameters:
+        - { name: supplementID, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from: { type: string, format: date }
+                to: { type: string, format: date }
+                skip: { type: array, items: { type: string, format: date } }
+                taken_with: { type: string }
+      responses:
+        '200': { description: 'OK: {logged, skipped}' }
   /meditations:
     post:
       summary: Log a meditation

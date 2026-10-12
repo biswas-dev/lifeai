@@ -37,6 +37,9 @@ import type {
   ExerciseHistory,
   NutritionPlan,
   StravaUpload,
+  Supplement,
+  SupplementDay,
+  SupplementLog,
   TrainingSchedule,
   WeekTraining,
   WorkoutExercise,
@@ -98,7 +101,7 @@ class ApiClient {
       ...this.authHeaders(),
       ...(options.headers as Record<string, string>),
     };
-    if (options.body && !(options.body instanceof FormData)) {
+    if (options.body && !(options.body instanceof FormData) && !(options.body instanceof Blob)) {
       headers["Content-Type"] = "application/json";
     }
     const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
@@ -451,6 +454,44 @@ class ApiClient {
     return id
       ? this.updateWorkout(id, body)
       : this.createWorkout(body as unknown as Record<string, unknown>);
+  }
+  mergeWorkouts(keepId: number, mergeId: number, useTiming = false) {
+    return this.request<Workout>(`/api/workouts/${keepId}/merge`, {
+      method: "POST",
+      body: JSON.stringify({ merge_id: mergeId, use_timing: useTiming }),
+    });
+  }
+  // ---- supplements ----
+  supplements() {
+    return this.request<Supplement[]>("/api/supplements");
+  }
+  supplementDays(date: string) {
+    return this.request<SupplementDay[]>(`/api/supplements?date=${date}`);
+  }
+  saveSupplement(id: number | null, body: Partial<Supplement>) {
+    return this.request<Supplement>(id ? `/api/supplements/${id}` : "/api/supplements", {
+      method: id ? "PATCH" : "POST",
+      body: JSON.stringify(body),
+    });
+  }
+  deleteSupplement(id: number) {
+    return this.request<{ ok: boolean }>(`/api/supplements/${id}`, { method: "DELETE" });
+  }
+  takeSupplement(id: number, date: string, takenWith = "") {
+    return this.request<SupplementLog>(`/api/supplements/${id}/days/${date}`, {
+      method: "PUT",
+      body: JSON.stringify({ taken_with: takenWith }),
+    });
+  }
+  untakeSupplement(id: number, date: string) {
+    return this.request<{ ok: boolean }>(`/api/supplements/${id}/days/${date}`, { method: "DELETE" });
+  }
+  uploadSupplementImage(id: number, image: Blob) {
+    return this.request<Supplement>(`/api/supplements/${id}/image`, {
+      method: "PUT",
+      headers: { "Content-Type": image.type || "application/octet-stream" },
+      body: image,
+    });
   }
   pushWorkoutToStrava(id: number) {
     return this.request<StravaUpload>(`/api/workouts/${id}/strava`, {

@@ -40,17 +40,18 @@ type Totals struct {
 
 // Day is everything logged on one calendar date.
 type Day struct {
-	Date        string         `json:"date"`
-	IsToday     bool           `json:"is_today"`
-	Metrics     Metrics        `json:"metrics"`
-	Water       []WaterEntry   `json:"water"`
-	Meals       []Meal         `json:"meals"`
-	Workouts    []Workout      `json:"workouts"`
-	Meditations []Meditation   `json:"meditations"`
-	Journal     []JournalEntry `json:"journal"`
-	Photos      []Photo        `json:"photos"`
-	Totals      Totals         `json:"totals"`
-	Goals       Goals          `json:"goals"`
+	Date        string          `json:"date"`
+	IsToday     bool            `json:"is_today"`
+	Metrics     Metrics         `json:"metrics"`
+	Water       []WaterEntry    `json:"water"`
+	Meals       []Meal          `json:"meals"`
+	Workouts    []Workout       `json:"workouts"`
+	Meditations []Meditation    `json:"meditations"`
+	Journal     []JournalEntry  `json:"journal"`
+	Photos      []Photo         `json:"photos"`
+	Supplements []SupplementDay `json:"supplements"`
+	Totals      Totals          `json:"totals"`
+	Goals       Goals           `json:"goals"`
 	// Week is exercise minutes for the Monday-to-Sunday week of this date.
 	Week WeekTraining `json:"week"`
 }
@@ -340,6 +341,9 @@ func (s *Server) loadDay(ctx context.Context, userID int64, date string) (Day, e
 		return day, err
 	}
 	if day.Photos, err = s.photosForDate(ctx, userID, date); err != nil {
+		return day, err
+	}
+	if day.Supplements, err = s.supplementDays(ctx, userID, date); err != nil {
 		return day, err
 	}
 	if day.Goals, err = s.goals(ctx, userID); err != nil {

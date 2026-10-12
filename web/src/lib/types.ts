@@ -361,9 +361,39 @@ export interface Day {
   meditations: Meditation[];
   journal: JournalEntry[];
   photos: Photo[];
+  supplements?: SupplementDay[];
   totals: Totals;
   goals: Goals;
   week?: WeekTraining;
+}
+
+export interface Supplement {
+  id: number;
+  name: string;
+  product: string;
+  dose: string;
+  taken_with: string;
+  product_url: string;
+  notes: string;
+  started_on: string;
+  active: boolean;
+  position: number;
+  image_url?: string;
+}
+
+export interface SupplementLog {
+  supplement_id: number;
+  date: string;
+  taken_with: string;
+  notes: string;
+}
+
+export interface SupplementDay extends Supplement {
+  taken: SupplementLog | null;
+  streak: number;
+  days_taken: number;
+  days_since: number;
+  missed: string[];
 }
 
 export interface DaySummary {

@@ -242,6 +242,9 @@ type BackfillResult struct {
 	Action  string  `json:"action"`
 	Slot    string  `json:"slot,omitempty"`
 	Workout Workout `json:"workout"`
+	// Linked is true when an imported recording of the session (e.g. from
+	// Strava) was folded into it.
+	Linked bool `json:"linked,omitempty"`
 }
 
 // backfillSession fills in a session after the fact: it updates the session
@@ -327,7 +330,25 @@ func (s *Server) backfillSession(ctx context.Context, userID int64, in BackfillI
 		body.Minutes = 60
 	}
 	res.Workout, err = s.saveWorkout(ctx, userID, id, body)
-	return res, err
+	if err != nil {
+		return res, err
+	}
+	// A recording of the session imported from Strava becomes part of it.
+	// Its measured start and length replace the slot's defaults unless the
+	// caller gave times or the session already had its own.
+	useTiming := in.Minutes == 0 && in.StartedAt == "" && (id == 0 || (slot != nil && body.Minutes == slot.Minutes() && body.StartedAt != nil && sameInstant(*body.StartedAt, slotStart(in.Date, slot.Start, s.userLocation(ctx)))))
+	if linked, ok, err := s.linkRecordedSession(ctx, userID, res.Workout.ID, useTiming); err != nil {
+		return res, err
+	} else if ok {
+		res.Workout, res.Linked = linked, true
+	}
+	return res, nil
+}
+
+func sameInstant(a, b string) bool {
+	ta, okA := parseDBTime(a)
+	tb, okB := parseDBTime(b)
+	return okA && okB && ta.Equal(tb)
 }
 
 func slotStart(date, clock string, loc *time.Location) string {
