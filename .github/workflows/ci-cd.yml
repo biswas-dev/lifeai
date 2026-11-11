@@ -22,7 +22,11 @@ on:
   pull_request:
     branches: [main, uat, production]
   workflow_dispatch:
-
+    inputs:
+      quality_only:
+        description: Run tests and publish reports without deploying applications
+        type: boolean
+        default: false
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -47,8 +51,28 @@ jobs:
         run: go vet ./...
       - name: Test
         working-directory: api
-        run: go test ./...
+        run: go test -coverprofile=coverage.out -covermode=atomic ./...
         timeout-minutes: 10
+
+      - name: Fetch verified report client
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -fsS https://coverage.biswas.me/ci/report-v1.py -o /tmp/project-quality-report.py
+          echo '620701586b18553b55b6eb0bc964a7a0dcef82f04f989b9f010b18947ebc746a  /tmp/project-quality-report.py' | sha256sum --check --status
+      - name: Publish application coverage
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          COVERAGE_TOKEN: ${{ secrets.COVERAGE_TOKEN }}
+          COVERAGE_REPO: lifeai
+          COVERAGE_GROUP: lifeai
+          COVERAGE_LANGUAGE: go
+          COVERAGE_SOURCE_ROOT: 'api'
+        run: |
+          export COVERAGE_GO_MODULE=$(sed -n "s/^module //p" api/go.mod)
+          python3 /tmp/project-quality-report.py coverage api/coverage.out
+
+
 
   test-web:
     name: Web tests
@@ -68,17 +92,37 @@ jobs:
         run: npx tsc --noEmit
       - name: Test
         working-directory: web
-        run: npx vitest run
+        run: npx vitest run --coverage --coverage.reporter=lcov
         timeout-minutes: 10
       - name: Build
         working-directory: web
         run: npx vite build
 
+      - name: Fetch verified report client
+        if: github.ref == 'refs/heads/main'
+        run: |
+          curl -fsS https://coverage.biswas.me/ci/report-v1.py -o /tmp/project-quality-report.py
+          echo '620701586b18553b55b6eb0bc964a7a0dcef82f04f989b9f010b18947ebc746a  /tmp/project-quality-report.py' | sha256sum --check --status
+      - name: Publish web coverage
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          COVERAGE_TOKEN: ${{ secrets.COVERAGE_WEB_TOKEN }}
+          COVERAGE_REPO: lifeai-web
+          COVERAGE_GROUP: lifeai
+          COVERAGE_LANGUAGE: node
+          COVERAGE_SOURCE_ROOT: 'web'
+        run: |
+          python3 /tmp/project-quality-report.py coverage web/coverage/lcov.info
+
+
+
   deploy-staging:
     needs: [test-api, test-web]
     name: Deploy to staging
     runs-on: [self-hosted, Linux, ARM64]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: >-
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') && inputs.quality_only != true
     environment: staging
     env:
       STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
@@ -102,11 +146,13 @@ jobs:
       - uses: actions/checkout@v7
       - run: bash deployment/scripts/deploy.sh staging
 
+
   deploy-uat:
     needs: [test-api, test-web]
     name: Deploy to UAT
     runs-on: [self-hosted, Linux, ARM64]
-    if: github.ref == 'refs/heads/uat' && github.event_name == 'push'
+    if: >-
+      (github.ref == 'refs/heads/uat' && github.event_name == 'push') && inputs.quality_only != true
     environment: uat
     env:
       UAT_SSH_PRIVATE_KEY: ${{ secrets.UAT_SSH_PRIVATE_KEY }}
@@ -130,11 +176,13 @@ jobs:
       - uses: actions/checkout@v7
       - run: bash deployment/scripts/deploy.sh uat
 
+
   deploy-production:
     needs: [test-api, test-web]
     name: Deploy to production
     runs-on: [self-hosted, Linux, X64, prod]
-    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    if: >-
+      (github.ref == 'refs/heads/production' && github.event_name == 'push') && inputs.quality_only != true
     environment: production
     env:
       PRODUCTION_SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
@@ -158,14 +206,12 @@ jobs:
       - uses: actions/checkout@v7
       - run: bash deployment/scripts/deploy.sh production
 
+
   verify-public:
     name: Verify public site
     needs: [deploy-staging, deploy-uat, deploy-production]
     if: >-
-      always() && github.event_name == 'push' &&
-      (needs.deploy-staging.result == 'success' ||
-       needs.deploy-uat.result == 'success' ||
-       needs.deploy-production.result == 'success')
+      (always() && github.event_name == 'push' && (needs.deploy-staging.result == 'success' || needs.deploy-uat.result == 'success' || needs.deploy-production.result == 'success')) && inputs.quality_only != true
     runs-on: ubuntu-latest
     steps:
       - name: Verify Cloudflare health and deployed version
