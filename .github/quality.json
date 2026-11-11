@@ -1,0 +1,26 @@
+{
+  "repo": "lifeai",
+  "components": {
+    "application": {
+      "repo": "lifeai",
+      "file": "coverage.out",
+      "language": "go",
+      "root": "api",
+      "token": "COVERAGE_TOKEN",
+      "label": "Backend",
+      "module": "github.com/biswas-dev/lifeai/api"
+    },
+    "web": {
+      "repo": "lifeai-web",
+      "file": "lcov.info",
+      "language": "node",
+      "root": "web",
+      "token": "COVERAGE_WEB_TOKEN",
+      "label": "web"
+    }
+  },
+  "workflows": [
+    ".github/workflows/security.yml",
+    ".github/workflows/ci-cd.yml"
+  ]
+}
